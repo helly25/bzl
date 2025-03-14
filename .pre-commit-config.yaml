@@ -1,0 +1,64 @@
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v5.0.0
+  hooks:
+  - id: check-added-large-files
+  - id: check-merge-conflict
+  - id: check-yaml
+  - id: end-of-file-fixer
+    exclude: |
+          (?x)(
+            .*[.]patch
+          )
+  - id: trailing-whitespace
+    exclude: |
+          (?x)(
+            .*[.]patch
+          )
+
+- repo: https://github.com/rhysd/actionlint
+  rev: v1.7.7
+  hooks:
+  - id: actionlint
+    name: Lint GitHub Actions workflow files
+    description: Runs actionlint to lint GitHub Actions workflow files
+    language: golang
+    types: ["yaml"]
+    files: ^\.github/workflows/
+    entry: actionlint
+    args: ["-shellcheck", ""]
+
+- repo: local
+  hooks:
+  - id: uncomment-bazelmod-includes
+    name: uncomment-bazelmod-includes
+    description: |
+      The repo version of MODULE.bazel may not have commented out includes.
+    language: pygrep
+    entry: \s*#\s*include
+    files: MODULE.bazel
+  - id: compare-versions
+    name: compare-versions
+    description: |
+      Compare the versions in CHANGELOG.md and MODULES.bazel.
+    language: system
+    entry: .pre-commit/check_version.sh
+    pass_filenames: False
+    types: [text]
+
+- repo: https://github.com/keith/pre-commit-buildifier
+  rev: 8.0.1
+  hooks:
+  - id: buildifier
+  - id: buildifier-lint
+    args: ["--warnings=all"]
+
+#- repo: https://github.com/lovesegfault/beautysh
+#  rev: v6.2.1
+#  hooks:
+#  - id: beautysh
+#
+#- repo: https://github.com/koalaman/shellcheck-precommit
+#  rev: v0.10.0
+#  hooks:
+#  - id: shellcheck
