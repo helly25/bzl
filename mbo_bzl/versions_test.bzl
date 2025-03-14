@@ -113,7 +113,7 @@ def _versions_lt_test(ctx):
     return unittest.end(env)
 
 def _versions_eq_test(ctx):
-    """Unit tests for `versions.lt`."""
+    """Unit tests for `versions.eq`."""
     env = unittest.begin(ctx)
 
     asserts.equals(env, versions.eq(25, 25), True)
@@ -132,7 +132,7 @@ def _versions_eq_test(ctx):
     return unittest.end(env)
 
 def _versions_ne_test(ctx):
-    """Unit tests for `versions.lt`."""
+    """Unit tests for `versions.ne`."""
     env = unittest.begin(ctx)
 
     asserts.equals(env, versions.ne(25, 25), False)
@@ -168,7 +168,7 @@ def _versions_parse_requirements_test(ctx):
     return unittest.end(env)
 
 def _versions_check_one_requirement_test(ctx):
-    """Unit tests for `versions.parse_requirements`."""
+    """Unit tests for `versions.check_one_requirement`."""
     env = unittest.begin(ctx)
 
     asserts.equals(env, versions.check_one_requirement("25", "25"), True)
@@ -179,7 +179,7 @@ def _versions_check_one_requirement_test(ctx):
     return unittest.end(env)
 
 def _versions_check_all_requirements_test(ctx):
-    """Unit tests for `versions.parse_requirements`."""
+    """Unit tests for `versions.check_all_requirements`."""
     env = unittest.begin(ctx)
 
     asserts.equals(env, versions.check_all_requirements("25", ["25"]), True)
