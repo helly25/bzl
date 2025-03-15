@@ -51,12 +51,16 @@ def _parse_version(version, error = "Cannot parse version."):
     While this attempts to retain Semver principles this mostly works for
     simple versions that have components consisting of (major, minor, patch).
     """
-    if type(version) == "string":
-        return version.split(".")
-    elif type(version) == "int":
+    if type(version) == "int":
         return [version]
-    elif type(version) == "list" or type(version) == "tuple":
-        return version
+    elif type(version) == "string":
+        if not version:
+            return []
+        version = version.split(".")
+    elif type(version) == "tuple":
+        version = [v for v in version]
+    if type(version) == "list":
+        return [int(version[p]) if p < 3 else version[p] for p in range(len(version))]
     extra_error = "Input was: '{version}'.".format(version = version)
     if error:
         fail([error, extra_error].join(" "))
@@ -145,6 +149,22 @@ def _version_ne(version_lhs, version_rhs):
     """
     return not _version_eq(version_lhs, version_rhs)
 
+def _check_one_requirement_struct(version, requirement):
+    if requirement.op == ">=":
+        return _version_ge(version, requirement.version)
+    elif requirement.op == "<":
+        return not _version_ge(version, requirement.version)
+    elif requirement.op == "<=":
+        return _version_le(version, requirement.version)
+    elif requirement.op == ">":
+        return not _version_le(version, requirement.version)
+    elif requirement.op == "==":
+        return _version_eq(version, requirement.version)
+    elif requirement.op == "!=":
+        return not _version_eq(version, requirement.version)
+    else:
+        fail("Bad requirement: '{requirement}'.".format(requirement = requirement))
+
 def _check_one_requirement(version, requirement):
     """Version comparison of the given `version` against a `requirement` string.
 
@@ -154,29 +174,49 @@ def _check_one_requirement(version, requirement):
     With the exception of comparators '==' and '!=':
         At most 3 parts (major, minor, patch) plus the lengths are considered.
     """
-    if requirement.startswith(">="):
-        return _version_ge(version, requirement[2:].strip())
-    elif requirement.startswith("<"):
-        return not _version_ge(version, requirement[1:].strip())
-    elif requirement.startswith("<="):
-        return _version_le(version, requirement[2:].strip())
-    elif requirement.startswith(">"):
-        return not _version_le(version, requirement[1:].strip())
-    elif requirement.startswith("=="):
-        return _version_eq(version, requirement[2:].strip())
-    elif requirement.startswith("!="):
-        return not _version_eq(version, requirement[2:].strip())
-    else:
-        return _version_eq(version, requirement)
+    if type(requirement) == "string":
+        if requirement.startswith(">="):
+            return _version_ge(version, requirement[2:].strip())
+        elif requirement.startswith("<="):
+            return _version_le(version, requirement[2:].strip())
+        elif requirement.startswith(">"):
+            return not _version_le(version, requirement[1:].strip())
+        elif requirement.startswith("<"):
+            return not _version_ge(version, requirement[1:].strip())
+        elif requirement.startswith("=="):
+            return _version_eq(version, requirement[2:].strip())
+        elif requirement.startswith("!="):
+            return not _version_eq(version, requirement[2:].strip())
+        else:
+            return _version_eq(version, requirement)
+    return _check_one_requirement_struct(version, requirement)
 
 def _check_all_requirements(version, requirement_list):
     """Verifies whether `version` adheres to the `requirement_list`.
     """
-    return all([_check_one_requirement(version, req) for req in requirement_list])
+    if type(requirement_list) == "list":
+        return all([_check_one_requirement(version, req) for req in requirement_list])
+    return _check_all_requirements(version, [v.split() for v in requirement_list.split(",")])
+
+def _parse_split_req(requirement):
+    if requirement.startswith(">="):
+        return struct(op = ">=", version = _parse_version(requirement[2:].strip()))
+    elif requirement.startswith(">"):
+        return struct(op = ">", version = _parse_version(requirement[1:].strip()))
+    elif requirement.startswith("<="):
+        return struct(op = "<=", version = _parse_version(requirement[2:].strip()))
+    elif requirement.startswith("<"):
+        return struct(op = "<", version = _parse_version(requirement[1:].strip()))
+    elif requirement.startswith("=="):
+        return struct(op = "==", version = _parse_version(requirement[2:].strip()))
+    elif requirement.startswith("!="):
+        return struct(op = "!=", version = _parse_version(requirement[2:].strip()))
+    else:
+        return struct(op = "==", version = _parse_version(requirement))
 
 def _parse_version_requirements(requirements):
     """Splits the `requirements` string for use with `check_all_requirements`."""
-    return [r.strip() for r in requirements.split(",")]
+    return [_parse_split_req(req.strip()) for req in requirements.split(",")]
 
 versions = struct(
     parse = _parse_version,
