@@ -34,7 +34,7 @@ jobs:
         BZLMOD: ${{ matrix.bazel_mode != 'workspace' && '--enable_bzlmod' || '--noenable_bzlmod' }}
         WORKSPACE: ${{ matrix.bazel_mode != 'bzlmod' && '--enable_workspace' || '--noenable_workspace' }}
       run: |
-        bazel "${BZLMOD}" "${WORKSPACE}" test //...
+        bazel test "${BZLMOD}" "${WORKSPACE}" //...
 
   done:
     needs: [pre-commit, test]
