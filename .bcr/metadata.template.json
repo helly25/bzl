@@ -1,0 +1,15 @@
+{
+  "homepage": "https://github.com/helly25/mbo_bzl",
+  "maintainers": [
+    {
+      "name": "helly25",
+      "email": "marcus.boerger@gmail.com",
+      "github": "helly25"
+    }
+  ],
+  "repository": [
+    "github:helly25/mbo_bzl"
+  ],
+  "versions": [],
+  "yanked_versions": {}
+}
