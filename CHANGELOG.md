@@ -1,3 +1,7 @@
+# 0.1.2
+
+* Fixed workspace file to work for transitive repos.
+
 # 0.1.1
 
 * Fixed some naming issues and remove mbo references.
