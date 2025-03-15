@@ -18,7 +18,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-        bazel_mode: [bzlmod, workspace]
+        bazel_mode: [bzlmod, workspace, both]
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v4
@@ -34,7 +34,6 @@ jobs:
         BZLMOD: ${{ matrix.bazel_mode != 'workspace' && '--enable_bzlmod' || '--noenable_bzlmod' }}
         WORKSPACE: ${{ matrix.bazel_mode != 'bzlmod' && '--enable_workspace' || '--noenable_workspace' }}
       run: |
-        echo "Flags: ${BZLMOD} ${WORKSPACE}"
         bazel test "${BZLMOD}" "${WORKSPACE}" //...
 
   done:
