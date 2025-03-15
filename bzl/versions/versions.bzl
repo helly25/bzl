@@ -76,6 +76,9 @@ def _parse_version(version, error = "Cannot parse version."):
                 # Unlike Semver which requires <major>.<minor>.<patch> we allow
                 # any length of number/"." sequence followed by "-" or "+" for
                 # <pre_release> and <build> components respectively.
+                # TODO(helly25): Semver allows both <pre_release> and <build> to
+                # be dot separated parts. Still, they are separated by "-" and
+                # "+" respectively.
                 pre_release = version[-1].split("-", 1)
                 if len(pre_release) > 1 and pre_release[0].count("+") == 0:
                     version[-1] = pre_release[0]
