@@ -1,6 +1,8 @@
 # Helly25 bzl, a Bazel support library
 
-This library provide Bazel Skylark functionality meant to help in maintaining other libraries.
+This library provides [Bazel](http://bazel.build) [Starlark](https://bazel.build/rules/language) functionality meant to help in maintaining other libraries.
+
+[![Test](https://github.com/helly25/bzl/actions/workflows/main.yml/badge.svg)](https://github.com/helly25/bzl/actions/workflows/main.yml)
 
 ## Versions
 
