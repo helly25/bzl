@@ -35,6 +35,13 @@ def _versions_parse_test(ctx):
     asserts.equals(env, versions.parse(("25", "33")), [25, 33])
     asserts.equals(env, versions.parse(("25", "33", "42", "bla")), [25, 33, 42, "bla"])
 
+    asserts.equals(env, versions.parse("25.33.42-pre.release+build.fun"), [25, 33, 42, "-pre.release", "+build.fun"])
+    asserts.equals(env, versions.parse("25.33.42-pre-release+build+fun"), [25, 33, 42, "-pre-release", "+build+fun"])
+    asserts.equals(env, versions.parse("25.33.42-pre-release+build-fun"), [25, 33, 42, "-pre-release", "+build-fun"])
+    asserts.equals(env, versions.parse("25.33.42+build.fun-foo.bar+baz"), [25, 33, 42, "+build.fun-foo.bar+baz"])
+    asserts.equals(env, versions.parse("25.33.42+build-fun-foo.bar+baz"), [25, 33, 42, "+build-fun-foo.bar+baz"])
+    asserts.equals(env, versions.parse("25.33.42+build+fun-foo.bar+baz"), [25, 33, 42, "+build+fun-foo.bar+baz"])
+
     return unittest.end(env)
 
 def _versions_ge_test(ctx):

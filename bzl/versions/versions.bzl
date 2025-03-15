@@ -39,6 +39,11 @@ print(_versions.le("42.0.0", 42) == True)
 ```
 """
 
+def _maybe_int(value):
+    if type(value) == "string" and value.isdigit():
+        return int(value)
+    return value
+
 def _parse_version(version, error = "Cannot parse version."):
     """Parses the input into a `list` or `tuple` of version components.
 
@@ -51,17 +56,41 @@ def _parse_version(version, error = "Cannot parse version."):
 
     While this attempts to retain Semver principles this mostly works for
     simple versions that have components consisting of (major, minor, patch).
+
+    The function is also relaxed about Semver as it is safer to try to parse
+    with likely intent rather then exact standard enforcement. If the latter is
+    necessary than a separate function, setting or parameter is needed.
     """
     if type(version) == "int":
         return [version]
     elif type(version) == "string":
         if not version:
             return []
-        version = version.split(".")
+        version = version.split(".", 2)
+        if version:
+            if version[-1].count("-") + version[-1].count("+") == 0:
+                # No semver compatible <pre_release> or <build> present.
+                # For safety we just split on all dots which is likely the intended behavior.
+                version = version[:-1] + version[-1].split(".")
+            elif version[-1]:
+                # Unlike Semver which requires <major>.<minor>.<patch> we allow
+                # any length of number/"." sequence followed by "-" or "+" for
+                # <pre_release> and <build> components respectively.
+                # TODO(helly25): Semver allows both <pre_release> and <build> to
+                # be dot separated parts. Still, they are separated by "-" and
+                # "+" respectively.
+                pre_release = version[-1].split("-", 1)
+                if len(pre_release) > 1 and pre_release[0].count("+") == 0:
+                    version[-1] = pre_release[0]
+                    version.append("-" + pre_release[1])
+                build = version[-1].split("+", 1)
+                if len(build) > 1:
+                    version[-1] = build[0]
+                    version.append("+" + build[1])
     elif type(version) == "tuple":
         version = [v for v in version]
     if type(version) == "list":
-        return [int(version[p]) if p < 3 else version[p] for p in range(len(version))]
+        return [_maybe_int(version[p]) for p in range(len(version))]
     extra_error = "Input was: '{version}'.".format(version = version)
     if error:
         fail([error, extra_error].join(" "))

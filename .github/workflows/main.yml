@@ -15,7 +15,11 @@ jobs:
 
   test:
     needs: pre-commit
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        bazel_mode: [bzlmod, workspace, both]
+    runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v4
     - uses: bazel-contrib/setup-bazel@0.14.0
@@ -26,8 +30,11 @@ jobs:
         # Share repository cache between workflows.
         repository-cache: true
     - name: Built & Test
+      env:
+        BZLMOD: ${{ matrix.bazel_mode != 'workspace' && '--enable_bzlmod' || '--noenable_bzlmod' }}
+        WORKSPACE: ${{ matrix.bazel_mode != 'bzlmod' && '--enable_workspace' || '--noenable_workspace' }}
       run: |
-        bazel test //...
+        bazel test "${BZLMOD}" "${WORKSPACE}" //...
 
   done:
     needs: [pre-commit, test]
