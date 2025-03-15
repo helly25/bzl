@@ -6,17 +6,25 @@ This library provides [Bazel](http://bazel.build) [Starlark](https://bazel.build
 
 ## Versions
 
-The `@helly25_bzl//bzl/versions:versions_bzl` sub-libray provides:
-
-* `versions` a single import structure:
-
-  * `parse`: Parses a version.
-  * `ge`: Implements L >= R.
-  * `gt`: Implements L > R.
-  * `le`: Implements L <= R.
-  * `lt`: Implements L < R.
-  * `eq`: Implements L == R.
-  * `ne`: Implements L != R.
-  * `check_one_requirement`: Checks a version adheres to a single requirement.
-  * `check_all_requirements`: Checks a version adheres to a requirements list.
-  * `parse_requirements`: Parses a requirements specification.
+* `load("@helly25_bzl//bzl/versions:versions_bzl", _versions = "versions")`
+  * `versions` is a single import structure:
+    * `parse`: Parses a version.
+    * `ge`: Implements L >= R.
+    * `gt`: Implements L > R.
+    * `le`: Implements L <= R.
+    * `lt`: Implements L < R.
+    * `eq`: Implements L == R.
+    * `ne`: Implements L != R.
+    * `check_one_requirement`: Checks a version adheres to a single requirement.
+    * `check_all_requirements`: Checks a version adheres to a requirements list.
+    * `parse_requirements`: Parses a requirements specification.
+  * Example:
+    ```bazel
+    my_version = "25.33.42"
+    min_version = (10, 11, 12)
+    if _versions.lt(my_version, min_version):
+      fail("My version {my_version} is earlier than {min_version}.".format(
+        my_version = my_version,
+        min_version = min_version,
+      ))
+    ```
