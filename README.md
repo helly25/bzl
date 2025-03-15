@@ -1,10 +1,12 @@
-# Helly25 mbo_bzl, a Bazel support library
+# Helly25 bzl, a Bazel support library
 
-This library provide Bazel Skylark functionality meant to help in maintaining other libraries.
+This library provides [Bazel](http://bazel.build) [Starlark](https://bazel.build/rules/language) functionality meant to help in maintaining other libraries.
+
+[![Test](https://github.com/helly25/bzl/actions/workflows/main.yml/badge.svg)](https://github.com/helly25/bzl/actions/workflows/main.yml)
 
 ## Versions
 
-The `@mbo_bzl//mbo_bzl:versions.bzl` sub-libray provides:
+The `@helly25_bzl//bzl/versions:versions_bzl` sub-libray provides:
 
 * `versions` a single import structure:
 

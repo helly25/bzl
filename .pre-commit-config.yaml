@@ -53,12 +53,12 @@ repos:
   - id: buildifier-lint
     args: ["--warnings=all"]
 
-#- repo: https://github.com/lovesegfault/beautysh
-#  rev: v6.2.1
-#  hooks:
-#  - id: beautysh
-#
-#- repo: https://github.com/koalaman/shellcheck-precommit
-#  rev: v0.10.0
-#  hooks:
-#  - id: shellcheck
+- repo: https://github.com/lovesegfault/beautysh
+  rev: v6.2.1
+  hooks:
+  - id: beautysh
+
+- repo: https://github.com/koalaman/shellcheck-precommit
+  rev: v0.10.0
+  hooks:
+  - id: shellcheck

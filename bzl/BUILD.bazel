@@ -11,11 +11,4 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific languag
 
-"""Module helly25_bzl."""
-
-module(
-    name = "helly25_bzl",
-    version = "0.1.0",
-)
-
-bazel_dep(name = "bazel_skylib", version = "1.7.1")
+"""Empty build file for @helly25_mbo//mbo."""

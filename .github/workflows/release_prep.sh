@@ -21,9 +21,9 @@
 set -euo pipefail
 
 # Custom args to update as needed.
-PACKAGE_NAME="mbo_bzl"
-BAZELMOD_NAME="helly25_mbo_bzl"
-WORKSPACE_NAME="helly25_mbo_bzl"
+PACKAGE_NAME="bzl"
+BAZELMOD_NAME="helly25_bzl"
+WORKSPACE_NAME="helly25_bzl"
 PATCHES=()
 
 # Automatic vars from workflow integration.

@@ -11,7 +11,7 @@ Some rules for the code layout and its development.
     read much more often then written.
   * Auto formatting also prevents pointless discussions like where '*' goes.
   * The guide mostly follows Google style: https://google.github.io/styleguide/
-* All exported library code is in the directory 'mbo_bzl'.
+* All exported library code is in the directory 'bzl'.
 * All public / exported code must:
   * be tested,
   * have a documentaion.
