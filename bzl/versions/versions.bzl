@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific languag
 
-"""A starlark implementation of versioning functions that follow mostly semver.
+"""A starlark implementation of versioning functions that mostly follow semver.
 
 Semantic Versioning (Semver) is defined at https://semver.org/
 

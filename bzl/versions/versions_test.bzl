@@ -14,7 +14,7 @@
 """Unit tests for versions.bzl."""
 
 load("@bazel_skylib//lib:unittest.bzl", "asserts", "unittest")
-load("//mbo_bzl:versions.bzl", "versions")
+load("//bzl/versions:versions.bzl", "versions")
 
 def _versions_parse_test(ctx):
     """Unit tests for `versions.parse`."""

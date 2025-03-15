@@ -10,5 +10,5 @@ jobs:
     permissions:
       contents: write
     with:
-      release_files: mbo_bzl-*.tar.gz
+      release_files: bzl-*.tar.gz
       prerelease: true

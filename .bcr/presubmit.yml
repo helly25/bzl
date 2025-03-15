@@ -11,4 +11,4 @@ tasks:
     platform: ${{ platform }}
     bazel: ${{ bazel }}
     build_targets:
-      - '@helly25_mbo//mbo_bzl:versions_tests'
+      - '@helly25_mbo//bzl/...'
