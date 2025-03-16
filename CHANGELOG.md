@@ -1,5 +1,3 @@
-# 0.2.1
-
 # 0.2.0
 
 * Added support for parsing out 'pre_release' and 'build' components.
