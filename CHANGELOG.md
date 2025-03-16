@@ -1,8 +1,11 @@
+# 0.2.1
+
 # 0.2.0
 
 * Added support for parsing out 'pre_release' and 'build' components.
 * Added `versions.compare`.
 * Added 'pre_release' and 'build' support for comparisons.
+* Added CI run for Windows (may be dropped at any future point).
 
 # 0.1.2
 
