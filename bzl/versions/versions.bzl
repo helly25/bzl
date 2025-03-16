@@ -14,29 +14,7 @@
 
 """A starlark implementation of versioning functions that mostly follow semver.
 
-Semantic Versioning (Semver) is defined at https://semver.org/
-
-At the moment the comparisons `eq (`==`) and `ne` (`!=`) respect all details.
-
-All other comparators only correctly respect major, minor and patch components.
-
-The full functionality is exposed as a singele struct containing all functions.
-
-The version parameters support:
-- a string that can be parsed according to:
-     <major>['.' <minor> [ '.' <patch> [.*]]]
-- a `list` or `tuple` where each component is a version part.
-- a single `int` which will be the major version.
-- anything else is an error and the functions will `fail`.
-
-Example:
-
-```starlark
-load("versions.bzl", _versions = "versions")
-
-print(_versions.eq("42.25.0", (42, 25, 0)) == True)
-print(_versions.le("42.0.0", 42) == True)
-```
+SEE [README.md](https://github.com/helly25/bzl/blob/main/README.md).
 """
 
 def _maybe_int(value):
