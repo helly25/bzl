@@ -47,13 +47,14 @@ Provides:
 * `load("@helly25_bzl//bzl/versions:versions_bzl", _versions = "versions")`
   * `versions` is a single import structure:
     * `parse`: Parses a version.
-    * `ge`: Implements L >= R.
-    * `gt`: Implements L > R.
-    * `le`: Implements L <= R.
-    * `lt`: Implements L < R.
-    * `eq`: Implements L == R.
-    * `ne`: Implements L != R.
-    * `compare`: Implements L OP R.
+    * `ge`: Implements `L >= R`.
+    * `gt`: Implements `L > R`.
+    * `le`: Implements `L <= R`.
+    * `lt`: Implements `L < R`.
+    * `eq`: Implements `L == R`.
+    * `ne`: Implements `L != R`.
+    * `cmp`: Implements `L <=> R` aka `(L < R) - (L > R)`.
+    * `compare`: Implements `L OP R`.
     * `check_one_requirement`: Checks a version adheres to a single requirement.
     * `check_all_requirements`: Checks a version adheres to a requirements list.
     * `parse_requirements`: Parses a requirements specification.

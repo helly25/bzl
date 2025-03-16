@@ -1,3 +1,7 @@
+# 0.2.1
+
+* Improved support for mixed type comparisons.
+
 # 0.2.0
 
 * Added support for parsing out 'pre_release' and 'build' components.

@@ -49,12 +49,53 @@ def _versions_parse_test(ctx):
 
     return unittest.end(env)
 
+def _test_cmp(env, lhs, rhs, expected):
+    _assert_eq(env, versions.cmp(lhs, rhs), expected, "{lhs} <=> {rhs}".format(
+        lhs = lhs,
+        rhs = rhs,
+    ))
+
 def _test_op(env, lhs, op, rhs, expected):
     _assert_eq(env, versions.compare(lhs, op, rhs), expected, "{lhs} {op} {rhs}".format(
         lhs = lhs,
         op = op,
         rhs = rhs,
     ))
+
+def _versions_cmp_test(ctx):
+    """Unit tests for `versions.ge`."""
+    env = unittest.begin(ctx)
+
+    _test_cmp(env, 25, 25, 0)
+    _test_cmp(env, 25, 42, -1)
+    _test_cmp(env, 42, 25, 1)
+
+    _test_cmp(env, "25.1", "25.1", 0)
+    _test_cmp(env, "25.2", "25.1", 1)
+    _test_cmp(env, "25.3", "25.4", -1)
+
+    _test_cmp(env, "25", "25", 0)
+    _test_cmp(env, "25", "25.0", -1)
+    _test_cmp(env, "25.0", "25.0", 0)
+    _test_cmp(env, "25.1", "25", 1)
+
+    _test_cmp(env, "26.0", "26.0-rc1", 1)
+    _test_cmp(env, "27.0-rc2", "27.0-rc1", 1)
+    _test_cmp(env, "28.0-rc3", "28.0-rc4", -1)
+    _test_cmp(env, "29.0-rc5", "29.0", -1)
+    _test_cmp(env, "30.0-rc1", "30.0-rc1", 0)
+
+    _test_cmp(env, "31.0-alpha", "31.0-alpha", 0)
+    _test_cmp(env, "32.0-alpha", "32.0-beta", -1)
+    _test_cmp(env, "33.0-alpha", "33.0-rc", -1)
+    _test_cmp(env, "34.0-beta", "34.0-alpha", 1)
+    _test_cmp(env, "35.0-beta", "35.0-beta", 0)
+    _test_cmp(env, "36.0-beta", "36.0-rc", -1)
+    _test_cmp(env, "37.0-rc", "37.0-alpha", 1)
+    _test_cmp(env, "38.0-rc", "38.0-beta", 1)
+    _test_cmp(env, "39.0-rc", "39.0-rc", 0)
+
+    return unittest.end(env)
 
 def _versions_ge_test(ctx):
     """Unit tests for `versions.ge`."""
@@ -326,6 +367,7 @@ versions_le_test = unittest.make(_versions_le_test)
 versions_lt_test = unittest.make(_versions_lt_test)
 versions_eq_test = unittest.make(_versions_eq_test)
 versions_ne_test = unittest.make(_versions_ne_test)
+versions_cmp_test = unittest.make(_versions_cmp_test)
 versions_parse_requirements_test = unittest.make(_versions_parse_requirements_test)
 versions_check_one_requirement_test = unittest.make(_versions_check_one_requirement_test)
 versions_check_all_requirements_test = unittest.make(_versions_check_all_requirements_test)
@@ -341,6 +383,7 @@ def versions_test_suite():
         versions_lt_test,
         versions_eq_test,
         versions_ne_test,
+        versions_cmp_test,
         versions_parse_requirements_test,
         versions_check_one_requirement_test,
         versions_check_all_requirements_test,
