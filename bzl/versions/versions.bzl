@@ -168,7 +168,7 @@ def _version_le(version_lhs, version_rhs):
 
     The inputs are parsed with `_parse_version`.
     """
-    return _version_cmp(version_lhs, version_rhs) >= 0
+    return _version_cmp(version_lhs, version_rhs) <= 0
 
 def _version_eq(version_lhs, version_rhs):
     """Compares two versions and returns whether their semantic implementation is equal.
@@ -202,16 +202,16 @@ def _version_compare(lhs, op, rhs, error = None):
     """Implements `lhs OP rhs`."""
     if op == ">=":
         return _version_ge(lhs, rhs)
-    elif op == "<":
-        return not _version_ge(lhs, rhs)
     elif op == "<=":
         return _version_le(lhs, rhs)
+    elif op == "<":
+        return _version_lt(lhs, rhs)
     elif op == ">":
-        return not _version_le(lhs, rhs)
+        return _version_gt(lhs, rhs)
     elif op == "==":
         return _version_eq(lhs, rhs)
     elif op == "!=":
-        return not _version_eq(lhs, rhs)
+        return _version_ne(lhs, rhs)
     elif error:
         fail(error)
     else:
