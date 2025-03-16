@@ -44,6 +44,49 @@ def _maybe_int(value):
         return int(value)
     return value
 
+def _parse_release(version):
+    parts = [_maybe_int(v) for v in version.split(".")]
+    results = []
+    for part in parts:
+        if not part[0].isdigit() and part[-1].isdigit():
+            p = 0  # The interpreter does not see this is always initialized.
+            for p in range(len(part), 0, -1):
+                if not part[p - 1].isdigit():
+                    break
+            if p > 1 and part[p - 1] == "-":
+                # A single trailing "-" gets removed iff the remainder is not empty.
+                results.append(part[:p - 1])
+            else:
+                results.append(part[:p])
+            results.append(part[p:])
+        else:
+            results.append(part)
+    return results
+
+def _parse_build(version):
+    parts = [_maybe_int(v) for v in version.split(".")]
+    return parts
+
+def _split_version_relese_build(version):
+    r = None
+    b = None
+    for p in range(len(version)):
+        if not b:
+            if version[p] == "+":
+                b = p
+                break
+            if not r and version[p] == "-":
+                r = p
+    if r:
+        if b:
+            return [version[:r]] + ["-"] + _parse_release(version[r + 1:b]) + ["+"] + _parse_build(version[b + 1:])
+        else:
+            return [version[:r]] + ["-"] + _parse_release(version[r + 1:])
+    elif b:
+        return [version[:b]] + ["+"] + _parse_build(version[b + 1:])
+    else:
+        return [version]
+
 def _parse_version(version, error = "Cannot parse version."):
     """Parses the input into a `list` or `tuple` of version components.
 
@@ -76,17 +119,10 @@ def _parse_version(version, error = "Cannot parse version."):
                 # Unlike Semver which requires <major>.<minor>.<patch> we allow
                 # any length of number/"." sequence followed by "-" or "+" for
                 # <pre_release> and <build> components respectively.
-                # TODO(helly25): Semver allows both <pre_release> and <build> to
-                # be dot separated parts. Still, they are separated by "-" and
-                # "+" respectively.
-                pre_release = version[-1].split("-", 1)
-                if len(pre_release) > 1 and pre_release[0].count("+") == 0:
-                    version[-1] = pre_release[0]
-                    version.append("-" + pre_release[1])
-                build = version[-1].split("+", 1)
-                if len(build) > 1:
-                    version[-1] = build[0]
-                    version.append("+" + build[1])
+                # Note: Semver allows both <pre_release> and <build> to be "."
+                # separated parts. Still separated by "-" and "+" respectively.
+                version = version[:-1] + _split_version_relese_build(version[-1])
+
     elif type(version) == "tuple":
         version = [v for v in version]
     if type(version) == "list":
@@ -97,103 +133,97 @@ def _parse_version(version, error = "Cannot parse version."):
     else:
         fail(error)
 
-def _version_ge(version_lhs, version_rhs):
-    """Implements `version_lhs` >= `version_rhs`.
+def _version_cmp(version_lhs, version_rhs):
+    """Implements `version_lhs` <=> `version_rhs`.
 
     The inputs are parsed with `_parse_version`.
-    At most 3 parts (major, minor, patch) plus the lengths are considered.
     """
     lhs = _parse_version(version_lhs, "Left hand argument is neither string, int nor list but {typ}.".format(typ = type(version_lhs)))
     rhs = _parse_version(version_rhs, "Right hand argument is neither string, int nor list {typ}.".format(typ = type(version_rhs)))
     for part in range(min(3, len(lhs), len(rhs))):
-        lhs_part = int(lhs[part])
-        rhs_part = int(rhs[part])
+        lhs_part = _maybe_int(lhs[part])
+        rhs_part = _maybe_int(rhs[part])
         if lhs_part < rhs_part:
-            return False
+            return -1
         if lhs_part > rhs_part:
-            return True
+            return 1
 
     # All parts available on both sides are the same.
-    return min(3, len(lhs)) >= min(3, len(rhs))
+    if min(3, len(lhs)) < min(3, len(rhs)):
+        return -1
+    elif min(3, len(lhs)) > min(3, len(rhs)):
+        return 1
+    else:
+        return 0
+
+def _version_ge(version_lhs, version_rhs):
+    """Implements `version_lhs` >= `version_rhs`.
+
+    The inputs are parsed with `_parse_version`.
+    """
+    return _version_cmp(version_lhs, version_rhs) >= 0
 
 def _version_le(version_lhs, version_rhs):
     """Implements `version_lhs` <= `version_rhs`.
 
     The inputs are parsed with `_parse_version`.
-    At most 3 parts (major, minor, patch) plus the lengths are considered.
     """
-    lhs = _parse_version(version_lhs, "Left hand argument is neither string, int nor list.")
-    rhs = _parse_version(version_rhs, "Right hand argument is neither string, int nor list.")
-    for part in range(min(3, len(lhs), len(rhs))):
-        lhs_part = int(lhs[part])
-        rhs_part = int(rhs[part])
-        if lhs_part < rhs_part:
-            return True
-        if lhs_part > rhs_part:
-            return False
-
-    # All parts available on both sides are the same.
-    return min(3, len(lhs)) <= min(3, len(rhs))
+    return _version_cmp(version_lhs, version_rhs) <= 0
 
 def _version_eq(version_lhs, version_rhs):
     """Compares two versions and returns whether their semantic implementation is equal.
 
     The inputs are parsed with `_parse_version`.
     """
-    lhs = _parse_version(version_lhs, "Left hand argument is neither string, int nor list.")
-    rhs = _parse_version(version_rhs, "Right hand argument is neither string, int nor list.")
-    if len(lhs) != len(rhs):
-        return False
-    for part in range(min(len(lhs), len(rhs))):
-        if part < 3:
-            lhs_part = int(lhs[part])
-            rhs_part = int(rhs[part])
-            if lhs_part != rhs_part:
-                return False
-        elif lhs[part] != rhs[part]:
-            return False
-
-    # All parts available on both sides are the same.
-    return len(lhs) == len(rhs)
+    return _version_cmp(version_lhs, version_rhs) == 0
 
 def _version_lt(version_lhs, version_rhs):
     """Implements `version_lhs` < `version_rhs`.
 
     The inputs are parsed with `_parse_version`.
-    At most 3 parts (major, minor, patch) plus the lengths are considered.
     """
-    return not _version_ge(version_lhs, version_rhs)
+    return _version_cmp(version_lhs, version_rhs) < 0
 
 def _version_gt(version_lhs, version_rhs):
     """Implements `version_lhs` > `version_rhs`.
 
     The inputs are parsed with `_parse_version`.
-    At most 3 parts (major, minor, patch) plus the lengths are considered.
     """
-    return not _version_le(version_lhs, version_rhs)
+    return _version_cmp(version_lhs, version_rhs) > 0
 
 def _version_ne(version_lhs, version_rhs):
     """Implements `version_lhs` != `version_rhs`.
 
     The inputs are parsed with `_parse_version`.
     """
-    return not _version_eq(version_lhs, version_rhs)
+    return _version_cmp(version_lhs, version_rhs) != 0
+
+def _version_compare(lhs, op, rhs, error = None):
+    """Implements `lhs OP rhs`."""
+    if op == ">=":
+        return _version_ge(lhs, rhs)
+    elif op == "<=":
+        return _version_le(lhs, rhs)
+    elif op == "<":
+        return _version_lt(lhs, rhs)
+    elif op == ">":
+        return _version_gt(lhs, rhs)
+    elif op == "==":
+        return _version_eq(lhs, rhs)
+    elif op == "!=":
+        return _version_ne(lhs, rhs)
+    elif error:
+        fail(error)
+    else:
+        fail("Bad comparator: '{op}'.".format(op = op))
 
 def _check_one_requirement_struct(version, requirement):
-    if requirement.op == ">=":
-        return _version_ge(version, requirement.version)
-    elif requirement.op == "<":
-        return not _version_ge(version, requirement.version)
-    elif requirement.op == "<=":
-        return _version_le(version, requirement.version)
-    elif requirement.op == ">":
-        return not _version_le(version, requirement.version)
-    elif requirement.op == "==":
-        return _version_eq(version, requirement.version)
-    elif requirement.op == "!=":
-        return not _version_eq(version, requirement.version)
-    else:
-        fail("Bad requirement: '{requirement}'.".format(requirement = requirement))
+    return _version_compare(
+        version,
+        requirement.op,
+        requirement.version,
+        "Bad requirement: '{requirement}'.".format(requirement = requirement),
+    )
 
 def _check_one_requirement(version, requirement):
     """Version comparison of the given `version` against a `requirement` string.
@@ -256,6 +286,7 @@ versions = struct(
     lt = _version_lt,
     eq = _version_eq,
     ne = _version_ne,
+    compare = _version_compare,
     check_one_requirement = _check_one_requirement,
     check_all_requirements = _check_all_requirements,
     parse_requirements = _parse_version_requirements,

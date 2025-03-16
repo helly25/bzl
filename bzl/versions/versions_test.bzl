@@ -17,49 +17,61 @@
 load("@bazel_skylib//lib:unittest.bzl", "asserts", "unittest")
 load("//bzl/versions:versions.bzl", "versions")
 
+def _assert_eq(env, result, expected, msg = None):
+    asserts.equals(env, expected, result, msg)
+
 def _versions_parse_test(ctx):
     """Unit tests for `versions.parse`."""
     env = unittest.begin(ctx)
 
-    asserts.equals(env, versions.parse("25"), [25])
-    asserts.equals(env, versions.parse("25.33.42.bla"), [25, 33, 42, "bla"])
-    asserts.equals(env, versions.parse(""), [])
+    _assert_eq(env, versions.parse("25"), [25])
+    _assert_eq(env, versions.parse("25.33.42.bla"), [25, 33, 42, "bla"])
+    _assert_eq(env, versions.parse(""), [])
     # Parsing '25.33.bla' does not work because 'bla' is not a number.
-    # asserts.equals(env, versions.parse("25.33.bla"), [25, 33, 42, "bla"])
+    # _assert_eq(env, versions.parse("25.33.bla"), [25, 33, 42, "bla"])
 
-    asserts.equals(env, versions.parse(25), [25])
-    asserts.equals(env, versions.parse("26"), [26])
-    asserts.equals(env, versions.parse([27]), [27])
-    asserts.equals(env, versions.parse((28)), [28])
+    _assert_eq(env, versions.parse(25), [25])
+    _assert_eq(env, versions.parse("26"), [26])
+    _assert_eq(env, versions.parse([27]), [27])
+    _assert_eq(env, versions.parse((28)), [28])
 
-    asserts.equals(env, versions.parse(("25", "33")), [25, 33])
-    asserts.equals(env, versions.parse(("25", "33", "42", "bla")), [25, 33, 42, "bla"])
+    _assert_eq(env, versions.parse(("25", "33")), [25, 33])
+    _assert_eq(env, versions.parse(("25", "33", "42", "bla")), [25, 33, 42, "bla"])
 
-    asserts.equals(env, versions.parse("25.33.42-pre.release+build.fun"), [25, 33, 42, "-pre.release", "+build.fun"])
-    asserts.equals(env, versions.parse("25.33.42-pre-release+build+fun"), [25, 33, 42, "-pre-release", "+build+fun"])
-    asserts.equals(env, versions.parse("25.33.42-pre-release+build-fun"), [25, 33, 42, "-pre-release", "+build-fun"])
-    asserts.equals(env, versions.parse("25.33.42+build.fun-foo.bar+baz"), [25, 33, 42, "+build.fun-foo.bar+baz"])
-    asserts.equals(env, versions.parse("25.33.42+build-fun-foo.bar+baz"), [25, 33, 42, "+build-fun-foo.bar+baz"])
-    asserts.equals(env, versions.parse("25.33.42+build+fun-foo.bar+baz"), [25, 33, 42, "+build+fun-foo.bar+baz"])
+    _assert_eq(env, versions.parse("25.30.42-pre.release+build.fun"), [25, 30, 42, "-", "pre", "release", "+", "build", "fun"])
+    _assert_eq(env, versions.parse("25.31.42-pre-release+build+fun"), [25, 31, 42, "-", "pre-release", "+", "build+fun"])
+    _assert_eq(env, versions.parse("25.32.42-pre-release+build-fun"), [25, 32, 42, "-", "pre-release", "+", "build-fun"])
+    _assert_eq(env, versions.parse("25.33.42+build.fun-foo.bar+baz"), [25, 33, 42, "+", "build", "fun-foo", "bar+baz"])
+    _assert_eq(env, versions.parse("25.34.42+build-fun-foo.bar+baz"), [25, 34, 42, "+", "build-fun-foo", "bar+baz"])
+    _assert_eq(env, versions.parse("25.35.42+build+fun-foo.bar+baz"), [25, 35, 42, "+", "build+fun-foo", "bar+baz"])
+
+    _assert_eq(env, versions.parse("25.35.42-rc1.beta-11.alpha--111+rc1"), [25, 35, 42, "-", "rc", 1, "beta", 11, "alpha-", 111, "+", "rc1"])
 
     return unittest.end(env)
+
+def _test_op(env, lhs, op, rhs, expected):
+    _assert_eq(env, versions.compare(lhs, op, rhs), expected, "{lhs} {op} {rhs}".format(
+        lhs = lhs,
+        op = op,
+        rhs = rhs,
+    ))
 
 def _versions_ge_test(ctx):
     """Unit tests for `versions.ge`."""
     env = unittest.begin(ctx)
 
-    asserts.equals(env, versions.ge(25, 25), True)
-    asserts.equals(env, versions.ge(25, 42), False)
-    asserts.equals(env, versions.ge(42, 25), True)
+    _test_op(env, 25, ">=", 25, True)
+    _test_op(env, 25, ">=", 42, False)
+    _test_op(env, 42, ">=", 25, True)
 
-    asserts.equals(env, versions.ge("25.1", "25.1"), True)
-    asserts.equals(env, versions.ge("25.2", "25.1"), True)
-    asserts.equals(env, versions.ge("25.3", "25.4"), False)
+    _test_op(env, "25.1", ">=", "25.1", True)
+    _test_op(env, "25.2", ">=", "25.1", True)
+    _test_op(env, "25.3", ">=", "25.4", False)
 
-    asserts.equals(env, versions.ge("25", "25"), True)
-    asserts.equals(env, versions.ge("25", "25.0"), False)
-    asserts.equals(env, versions.ge("25.0", "25.0"), True)
-    asserts.equals(env, versions.ge("25.1", "25"), True)
+    _test_op(env, "25", ">=", "25", True)
+    _test_op(env, "25", ">=", "25.0", False)
+    _test_op(env, "25.0", ">=", "25.0", True)
+    _test_op(env, "25.1", ">=", "25", True)
 
     return unittest.end(env)
 
@@ -67,18 +79,18 @@ def _versions_gt_test(ctx):
     """Unit tests for `versions.gt`."""
     env = unittest.begin(ctx)
 
-    asserts.equals(env, versions.gt(25, 25), False)
-    asserts.equals(env, versions.gt(25, 42), False)
-    asserts.equals(env, versions.gt(42, 25), True)
+    _test_op(env, 25, ">", 25, False)
+    _test_op(env, 25, ">", 42, False)
+    _test_op(env, 42, ">", 25, True)
 
-    asserts.equals(env, versions.gt("25.1", "25.1"), False)
-    asserts.equals(env, versions.gt("25.2", "25.1"), True)
-    asserts.equals(env, versions.gt("25.3", "25.4"), False)
+    _test_op(env, "25.1", ">", "25.1", False)
+    _test_op(env, "25.2", ">", "25.1", True)
+    _test_op(env, "25.3", ">", "25.4", False)
 
-    asserts.equals(env, versions.gt("25", "25"), False)
-    asserts.equals(env, versions.gt("25", "25.0"), False)
-    asserts.equals(env, versions.gt("25.0", "25.0"), False)
-    asserts.equals(env, versions.gt("25.1", "25"), True)
+    _test_op(env, "25", ">", "25", False)
+    _test_op(env, "25", ">", "25.0", False)
+    _test_op(env, "25.0", ">", "25.0", False)
+    _test_op(env, "25.1", ">", "25", True)
 
     return unittest.end(env)
 
@@ -86,18 +98,18 @@ def _versions_le_test(ctx):
     """Unit tests for `versions.le`."""
     env = unittest.begin(ctx)
 
-    asserts.equals(env, versions.le(25, 25), True)
-    asserts.equals(env, versions.le(25, 42), True)
-    asserts.equals(env, versions.le(42, 25), False)
+    _test_op(env, 25, "<=", 25, True)
+    _test_op(env, 25, "<=", 42, True)
+    _test_op(env, 42, "<=", 25, False)
 
-    asserts.equals(env, versions.le("25.1", "25.1"), True)
-    asserts.equals(env, versions.le("25.2", "25.1"), False)
-    asserts.equals(env, versions.le("25.3", "25.4"), True)
+    _test_op(env, "25.1", "<=", "25.1", True)
+    _test_op(env, "25.2", "<=", "25.1", False)
+    _test_op(env, "25.3", "<=", "25.4", True)
 
-    asserts.equals(env, versions.le("25", "25"), True)
-    asserts.equals(env, versions.le("25", "25.0"), True)
-    asserts.equals(env, versions.le("25.0", "25.0"), True)
-    asserts.equals(env, versions.le("25.1", "25"), False)
+    _test_op(env, "25", "<=", "25", True)
+    _test_op(env, "25", "<=", "25.0", True)
+    _test_op(env, "25.0", "<=", "25.0", True)
+    _test_op(env, "25.1", "<=", "25", False)
 
     return unittest.end(env)
 
@@ -105,18 +117,18 @@ def _versions_lt_test(ctx):
     """Unit tests for `versions.lt`."""
     env = unittest.begin(ctx)
 
-    asserts.equals(env, versions.lt(25, 25), False)
-    asserts.equals(env, versions.lt(25, 42), True)
-    asserts.equals(env, versions.lt(42, 25), False)
+    _test_op(env, 25, "<", 25, False)
+    _test_op(env, 25, "<", 42, True)
+    _test_op(env, 42, "<", 25, False)
 
-    asserts.equals(env, versions.lt("25.1", "25.1"), False)
-    asserts.equals(env, versions.lt("25.2", "25.1"), False)
-    asserts.equals(env, versions.lt("25.3", "25.4"), True)
+    _test_op(env, "25.1", "<", "25.1", False)
+    _test_op(env, "25.2", "<", "25.1", False)
+    _test_op(env, "25.3", "<", "25.4", True)
 
-    asserts.equals(env, versions.lt("25", "25"), False)
-    asserts.equals(env, versions.lt("25", "25.0"), True)
-    asserts.equals(env, versions.lt("25.0", "25.0"), False)
-    asserts.equals(env, versions.lt("25.1", "25"), False)
+    _test_op(env, "25", "<", "25", False)
+    _test_op(env, "25", "<", "25.0", True)
+    _test_op(env, "25.0", "<", "25.0", False)
+    _test_op(env, "25.1", "<", "25", False)
 
     return unittest.end(env)
 
@@ -124,18 +136,18 @@ def _versions_eq_test(ctx):
     """Unit tests for `versions.eq`."""
     env = unittest.begin(ctx)
 
-    asserts.equals(env, versions.eq(25, 25), True)
-    asserts.equals(env, versions.eq(25, 42), False)
-    asserts.equals(env, versions.eq(42, 25), False)
+    _test_op(env, 25, "==", 25, True)
+    _test_op(env, 25, "==", 42, False)
+    _test_op(env, 42, "==", 25, False)
 
-    asserts.equals(env, versions.eq("25.1", "25.1"), True)
-    asserts.equals(env, versions.eq("25.2", "25.1"), False)
-    asserts.equals(env, versions.eq("25.3", "25.4"), False)
+    _test_op(env, "25.1", "==", "25.1", True)
+    _test_op(env, "25.2", "==", "25.1", False)
+    _test_op(env, "25.3", "==", "25.4", False)
 
-    asserts.equals(env, versions.eq("25", "25"), True)
-    asserts.equals(env, versions.eq("25", "25.0"), False)
-    asserts.equals(env, versions.eq("25.0", "25.0"), True)
-    asserts.equals(env, versions.eq("25.1", "25"), False)
+    _test_op(env, "25", "==", "25", True)
+    _test_op(env, "25", "==", "25.0", False)
+    _test_op(env, "25.0", "==", "25.0", True)
+    _test_op(env, "25.1", "==", "25", False)
 
     return unittest.end(env)
 
@@ -143,18 +155,18 @@ def _versions_ne_test(ctx):
     """Unit tests for `versions.ne`."""
     env = unittest.begin(ctx)
 
-    asserts.equals(env, versions.ne(25, 25), False)
-    asserts.equals(env, versions.ne(25, 42), True)
-    asserts.equals(env, versions.ne(42, 25), True)
+    _test_op(env, 25, "!=", 25, False)
+    _test_op(env, 25, "!=", 42, True)
+    _test_op(env, 42, "!=", 25, True)
 
-    asserts.equals(env, versions.ne("25.1", "25.1"), False)
-    asserts.equals(env, versions.ne("25.2", "25.1"), True)
-    asserts.equals(env, versions.ne("25.3", "25.4"), True)
+    _test_op(env, "25.1", "!=", "25.1", False)
+    _test_op(env, "25.2", "!=", "25.1", True)
+    _test_op(env, "25.3", "!=", "25.4", True)
 
-    asserts.equals(env, versions.ne("25", "25"), False)
-    asserts.equals(env, versions.ne("25", "25.0"), True)
-    asserts.equals(env, versions.ne("25.0", "25.0"), False)
-    asserts.equals(env, versions.ne("25.1", "25"), True)
+    _test_op(env, "25", "!=", "25", False)
+    _test_op(env, "25", "!=", "25.0", True)
+    _test_op(env, "25.0", "!=", "25.0", False)
+    _test_op(env, "25.1", "!=", "25", True)
 
     return unittest.end(env)
 
@@ -162,13 +174,13 @@ def _versions_parse_requirements_test(ctx):
     """Unit tests for `versions.parse_requirements`."""
     env = unittest.begin(ctx)
 
-    asserts.equals(env, versions.parse_requirements("25"), [struct(op = "==", version = [25])])
-    asserts.equals(env, versions.parse_requirements("<=26"), [struct(op = "<=", version = [26])])
-    asserts.equals(env, versions.parse_requirements(">=27.1,<=28.1.2"), [
+    _assert_eq(env, versions.parse_requirements("25"), [struct(op = "==", version = [25])])
+    _assert_eq(env, versions.parse_requirements("<=26"), [struct(op = "<=", version = [26])])
+    _assert_eq(env, versions.parse_requirements(">=27.1,<=28.1.2"), [
         struct(op = ">=", version = [27, 1]),
         struct(op = "<=", version = [28, 1, 2]),
     ])
-    asserts.equals(env, versions.parse_requirements(" >= 29.1 , <= 29.1.2.bla "), [
+    _assert_eq(env, versions.parse_requirements(" >= 29.1 , <= 29.1.2.bla "), [
         struct(op = ">=", version = [29, 1]),
         struct(op = "<=", version = [29, 1, 2, "bla"]),
     ])
@@ -179,10 +191,10 @@ def _versions_check_one_requirement_test(ctx):
     """Unit tests for `versions.check_one_requirement`."""
     env = unittest.begin(ctx)
 
-    asserts.equals(env, versions.check_one_requirement("25", "25"), True)
-    asserts.equals(env, versions.check_one_requirement([26], "42"), False)
-    asserts.equals(env, versions.check_one_requirement(27, ">=26"), True)
-    asserts.equals(env, versions.check_one_requirement(28, "<=26"), False)
+    _assert_eq(env, versions.check_one_requirement("25", "25"), True)
+    _assert_eq(env, versions.check_one_requirement([26], "42"), False)
+    _assert_eq(env, versions.check_one_requirement(27, ">=26"), True)
+    _assert_eq(env, versions.check_one_requirement(28, "<=26"), False)
 
     return unittest.end(env)
 
@@ -190,20 +202,20 @@ def _versions_check_all_requirements_test(ctx):
     """Unit tests for `versions.check_all_requirements`."""
     env = unittest.begin(ctx)
 
-    asserts.equals(env, versions.check_all_requirements("25", ["25"]), True)
-    asserts.equals(env, versions.check_all_requirements("33", ["25", "33", "42"]), False)
-    asserts.equals(env, versions.check_all_requirements("42", ["42", "42", "42"]), True)
+    _assert_eq(env, versions.check_all_requirements("25", ["25"]), True)
+    _assert_eq(env, versions.check_all_requirements("33", ["25", "33", "42"]), False)
+    _assert_eq(env, versions.check_all_requirements("42", ["42", "42", "42"]), True)
 
-    asserts.equals(env, versions.check_all_requirements("34", [">=25", "!=34", "<42"]), False)
-    asserts.equals(env, versions.check_all_requirements("35", [">=25", "!=34", "<42"]), True)
+    _assert_eq(env, versions.check_all_requirements("34", [">=25", "!=34", "<42"]), False)
+    _assert_eq(env, versions.check_all_requirements("35", [">=25", "!=34", "<42"]), True)
 
-    asserts.equals(env, versions.check_all_requirements("36", [
+    _assert_eq(env, versions.check_all_requirements("36", [
         struct(op = ">=", version = 25),
         struct(op = "!=", version = 34),
         struct(op = "<", version = 42),
     ]), True)
 
-    asserts.equals(env, versions.check_all_requirements("37", [
+    _assert_eq(env, versions.check_all_requirements("37", [
         struct(op = ">=", version = 25),
         struct(op = "!=", version = 37),
         struct(op = "<", version = 42),

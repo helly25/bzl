@@ -1,6 +1,7 @@
 # 0.2.0
 
 * Added support for parsing out <pre_release> and <build> components.
+* Added `versions.compare`.
 
 # 0.1.2
 
