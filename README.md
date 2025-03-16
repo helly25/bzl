@@ -86,4 +86,4 @@ http_archive(
 
 ### Dependencies
 
-* `bazel_skylib` (for bzlmod it is a dev dependency).
+* `bazel_skylib`.
