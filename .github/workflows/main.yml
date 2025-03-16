@@ -17,6 +17,7 @@ jobs:
     needs: pre-commit
     strategy:
       matrix:
+        # If `Windows` support is removed - state so inthe README.md
         os: [ubuntu-latest, macos-latest, windows-latest]
         bazel_mode: [bzlmod, workspace, both]
     runs-on: ${{ matrix.os }}
