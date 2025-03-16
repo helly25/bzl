@@ -73,6 +73,22 @@ def _versions_ge_test(ctx):
     _test_op(env, "25.0", ">=", "25.0", True)
     _test_op(env, "25.1", ">=", "25", True)
 
+    _test_op(env, "26.0", ">=", "26.0-rc1", True)
+    _test_op(env, "27.0-rc2", ">=", "27.0-rc1", True)
+    _test_op(env, "28.0-rc3", ">=", "28.0-rc4", False)
+    _test_op(env, "29.0-rc5", ">=", "29.0", False)
+    _test_op(env, "30.0-rc1", ">=", "30.0-rc1", True)
+
+    _test_op(env, "31.0-alpha", ">=", "31.0-alpha", True)
+    _test_op(env, "32.0-alpha", ">=", "32.0-beta", False)
+    _test_op(env, "33.0-alpha", ">=", "33.0-rc", False)
+    _test_op(env, "34.0-beta", ">=", "34.0-alpha", True)
+    _test_op(env, "35.0-beta", ">=", "35.0-beta", True)
+    _test_op(env, "36.0-beta", ">=", "36.0-rc", False)
+    _test_op(env, "37.0-rc", ">=", "37.0-alpha", True)
+    _test_op(env, "38.0-rc", ">=", "38.0-beta", True)
+    _test_op(env, "39.0-rc", ">=", "39.0-rc", True)
+
     return unittest.end(env)
 
 def _versions_gt_test(ctx):
@@ -91,6 +107,22 @@ def _versions_gt_test(ctx):
     _test_op(env, "25", ">", "25.0", False)
     _test_op(env, "25.0", ">", "25.0", False)
     _test_op(env, "25.1", ">", "25", True)
+
+    _test_op(env, "26.0", ">", "26.0-rc1", True)
+    _test_op(env, "27.0-rc2", ">", "27.0-rc1", True)
+    _test_op(env, "28.0-rc3", ">", "28.0-rc4", False)
+    _test_op(env, "29.0-rc5", ">", "29.0", False)
+    _test_op(env, "30.0-rc1", ">", "30.0-rc1", False)
+
+    _test_op(env, "31.0-alpha", ">", "31.0-alpha", False)
+    _test_op(env, "32.0-alpha", ">", "32.0-beta", False)
+    _test_op(env, "33.0-alpha", ">", "33.0-rc", False)
+    _test_op(env, "34.0-beta", ">", "34.0-alpha", True)
+    _test_op(env, "35.0-beta", ">", "35.0-beta", False)
+    _test_op(env, "36.0-beta", ">", "36.0-rc", False)
+    _test_op(env, "37.0-rc", ">", "37.0-alpha", True)
+    _test_op(env, "38.0-rc", ">", "38.0-beta", True)
+    _test_op(env, "39.0-rc", ">", "39.0-rc", False)
 
     return unittest.end(env)
 
@@ -111,6 +143,22 @@ def _versions_le_test(ctx):
     _test_op(env, "25.0", "<=", "25.0", True)
     _test_op(env, "25.1", "<=", "25", False)
 
+    _test_op(env, "26.0", "<=", "26.0-rc1", False)
+    _test_op(env, "27.0-rc2", "<=", "27.0-rc1", False)
+    _test_op(env, "28.0-rc3", "<=", "28.0-rc4", True)
+    _test_op(env, "29.0-rc5", "<=", "29.0", True)
+    _test_op(env, "30.0-rc1", "<=", "30.0-rc1", True)
+
+    _test_op(env, "31.0-alpha", "<=", "31.0-alpha", True)
+    _test_op(env, "32.0-alpha", "<=", "32.0-beta", True)
+    _test_op(env, "33.0-alpha", "<=", "33.0-rc", True)
+    _test_op(env, "34.0-beta", "<=", "34.0-alpha", False)
+    _test_op(env, "35.0-beta", "<=", "35.0-beta", True)
+    _test_op(env, "36.0-beta", "<=", "36.0-rc", True)
+    _test_op(env, "37.0-rc", "<=", "37.0-alpha", False)
+    _test_op(env, "38.0-rc", "<=", "38.0-beta", False)
+    _test_op(env, "39.0-rc", "<=", "39.0-rc", True)
+
     return unittest.end(env)
 
 def _versions_lt_test(ctx):
@@ -129,6 +177,22 @@ def _versions_lt_test(ctx):
     _test_op(env, "25", "<", "25.0", True)
     _test_op(env, "25.0", "<", "25.0", False)
     _test_op(env, "25.1", "<", "25", False)
+
+    _test_op(env, "26.0", "<", "26.0-rc1", False)
+    _test_op(env, "27.0-rc2", "<", "27.0-rc1", False)
+    _test_op(env, "28.0-rc3", "<", "28.0-rc4", True)
+    _test_op(env, "29.0-rc5", "<", "29.0", True)
+    _test_op(env, "30.0-rc1", "<", "30.0-rc1", False)
+
+    _test_op(env, "31.0-alpha", "<", "31.0-alpha", False)
+    _test_op(env, "32.0-alpha", "<", "32.0-beta", True)
+    _test_op(env, "33.0-alpha", "<", "33.0-rc", True)
+    _test_op(env, "34.0-beta", "<", "34.0-alpha", False)
+    _test_op(env, "35.0-beta", "<", "35.0-beta", False)
+    _test_op(env, "36.0-beta", "<", "36.0-rc", True)
+    _test_op(env, "37.0-rc", "<", "37.0-alpha", False)
+    _test_op(env, "38.0-rc", "<", "38.0-beta", False)
+    _test_op(env, "39.0-rc", "<", "39.0-rc", False)
 
     return unittest.end(env)
 
@@ -149,6 +213,22 @@ def _versions_eq_test(ctx):
     _test_op(env, "25.0", "==", "25.0", True)
     _test_op(env, "25.1", "==", "25", False)
 
+    _test_op(env, "26.0", "==", "26.0-rc1", False)
+    _test_op(env, "27.0-rc2", "==", "27.0-rc1", False)
+    _test_op(env, "28.0-rc3", "==", "28.0-rc4", False)
+    _test_op(env, "29.0-rc5", "==", "29.0", False)
+    _test_op(env, "30.0-rc1", "==", "30.0-rc1", True)
+
+    _test_op(env, "31.0-alpha", "==", "31.0-alpha", True)
+    _test_op(env, "32.0-alpha", "==", "32.0-beta", False)
+    _test_op(env, "33.0-alpha", "==", "33.0-rc", False)
+    _test_op(env, "34.0-beta", "==", "34.0-alpha", False)
+    _test_op(env, "35.0-beta", "==", "35.0-beta", True)
+    _test_op(env, "36.0-beta", "==", "36.0-rc", False)
+    _test_op(env, "37.0-rc", "==", "37.0-alpha", False)
+    _test_op(env, "38.0-rc", "==", "38.0-beta", False)
+    _test_op(env, "39.0-rc", "==", "39.0-rc", True)
+
     return unittest.end(env)
 
 def _versions_ne_test(ctx):
@@ -167,6 +247,22 @@ def _versions_ne_test(ctx):
     _test_op(env, "25", "!=", "25.0", True)
     _test_op(env, "25.0", "!=", "25.0", False)
     _test_op(env, "25.1", "!=", "25", True)
+
+    _test_op(env, "26.0", "!=", "26.0-rc1", True)
+    _test_op(env, "27.0-rc2", "!=", "27.0-rc1", True)
+    _test_op(env, "28.0-rc3", "!=", "28.0-rc4", True)
+    _test_op(env, "29.0-rc5", "!=", "29.0", True)
+    _test_op(env, "30.0-rc1", "!=", "30.0-rc1", False)
+
+    _test_op(env, "31.0-alpha", "!=", "31.0-alpha", False)
+    _test_op(env, "32.0-alpha", "!=", "32.0-beta", True)
+    _test_op(env, "33.0-alpha", "!=", "33.0-rc", True)
+    _test_op(env, "34.0-beta", "!=", "34.0-alpha", True)
+    _test_op(env, "35.0-beta", "!=", "35.0-beta", False)
+    _test_op(env, "36.0-beta", "!=", "36.0-rc", True)
+    _test_op(env, "37.0-rc", "!=", "37.0-alpha", True)
+    _test_op(env, "38.0-rc", "!=", "38.0-beta", True)
+    _test_op(env, "39.0-rc", "!=", "39.0-rc", False)
 
     return unittest.end(env)
 
