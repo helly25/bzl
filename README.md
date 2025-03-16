@@ -15,6 +15,7 @@ This library provides [Bazel](http://bazel.build) [Starlark](https://bazel.build
     * `lt`: Implements L < R.
     * `eq`: Implements L == R.
     * `ne`: Implements L != R.
+    * `compare`: Implements L OP R.
     * `check_one_requirement`: Checks a version adheres to a single requirement.
     * `check_all_requirements`: Checks a version adheres to a requirements list.
     * `parse_requirements`: Parses a requirements specification.
