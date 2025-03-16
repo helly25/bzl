@@ -61,14 +61,12 @@ Provides:
 ## Installation
 
 The library is available for both Bazelmod and Workspace installations and works
-on Ubuntu and MacOs with Bazel version 7.x and 8.x (Other systems are simply not
-tested).
-
-The only dependency is on `bazel_skylib` for bzlmod a dev dependency.
+on MacOS, Ubuntu and Windows with Bazel version 7.x and 8.x (Other systems are
+simply not tested). However future version may drop Windows support.
 
 ### For MODULES.bazel
 
-See https://github.com/helly25/bzl/releases to replease the version number.
+See https://github.com/helly25/bzl/releases to replace the version number.
 
 ```
 bazel_dep(name = "helly25_bzl", version = "0.0.0")
@@ -85,3 +83,7 @@ http_archive(
   sha256 = "...." # see https://github.com/helly25/bzl/releases for version numbers SHA256 codes.
 )
 ```
+
+### Dependencies
+
+The only dependency is on `bazel_skylib` for bzlmod a dev dependency.

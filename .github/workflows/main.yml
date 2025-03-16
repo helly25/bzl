@@ -17,7 +17,8 @@ jobs:
     needs: pre-commit
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        # If `Windows` support is removed - state so inthe README.md
+        os: [ubuntu-latest, macos-latest, windows-latest]
         bazel_mode: [bzlmod, workspace, both]
     runs-on: ${{ matrix.os }}
     steps:
@@ -34,7 +35,7 @@ jobs:
         BZLMOD: ${{ matrix.bazel_mode != 'workspace' && '--enable_bzlmod' || '--noenable_bzlmod' }}
         WORKSPACE: ${{ matrix.bazel_mode != 'bzlmod' && '--enable_workspace' || '--noenable_workspace' }}
       run: |
-        bazel test "${BZLMOD}" "${WORKSPACE}" //...
+        bazel test ${{env.BZLMOD}} ${{env.WORKSPACE}} //...
 
   done:
     needs: [pre-commit, test]
