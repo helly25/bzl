@@ -95,6 +95,12 @@ def _versions_cmp_test(ctx):
     _test_cmp(env, "38.0-rc", "38.0-beta", 1)
     _test_cmp(env, "39.0-rc", "39.0-rc", 0)
 
+    _test_cmp(env, "40.0-rc", "40.0-0", 1)  # Number before Text
+    _test_cmp(env, "41.0-0", "41.0-rc", -1)
+    _test_cmp(env, "42.0-1", "42.0-2", -1)
+    _test_cmp(env, "42.0-3", "42.0-3", 0)
+    _test_cmp(env, "43.0-5", "43.0-4", 1)
+
     return unittest.end(env)
 
 def _versions_ge_test(ctx):

@@ -26,6 +26,10 @@ def _parse_pre_release(version):
     parts = [_maybe_int(v) for v in version.split(".")]
     results = []
     for part in parts:
+        if type(part) == "int":
+            results.append(part)
+            continue
+        part = str(part)
         if not part[0].isdigit() and part[-1].isdigit():
             p = 0  # The interpreter does not see this is always initialized.
             for p in range(len(part), 0, -1):
@@ -122,36 +126,40 @@ def _cmp(lhs, rhs):
         return 0
     lhs = _maybe_int(lhs)
     rhs = _maybe_int(rhs)
-    if type(lhs) == int or type(rhs) == str:
+    if type(lhs) == "int" or type(rhs) == "string":
         # Purely numeric identifiers have lower precedence than strings.
-        if type(lhs) == int and type(rhs) == str:
+        if type(lhs) == "int" and type(rhs) == "string":
             return -1
-        if type(lhs) == str and type(rhs) == int:
+        if type(lhs) == "string" and type(rhs) == "int":
             return 1
-        if type(lhs) == int and type(rhs) == int:
+        if type(lhs) == "int" and type(rhs) == "int":
             return int(lhs > rhs) - int(lhs < rhs)
     lhs = str(lhs)
     rhs = str(rhs)
     return int(lhs > rhs) - int(lhs < rhs)
 
 def _extra_cmp(lhs, rhs):
-    """Compares `None`, "-" and "+"."""
-    if lhs == rhs:
+    """Comparisons respecting `None`, "-" and "+"."""
+    if _maybe_int(lhs) == _maybe_int(rhs):
         return 0
     if not lhs:
         if rhs == "-":
             return 1
         else:
             return -1
-    elif not rhs:
+    if not rhs:
         if lhs == "-":
             return -1
         else:
             return 1
-    elif lhs == "-":
+
+    # Case `lhs == rhs` was already handled.
+    if lhs == "-":
         return -1
-    else:
+    elif rhs == "-":
         return 1
+
+    return _cmp(lhs, rhs)
 
 def _at_or(array, pos, default = None):
     if pos < len(array):
@@ -175,13 +183,13 @@ def _version_cmp(version_lhs, version_rhs):
     part = 0
     for part in range(min(len(lhs), len(rhs))):
         if lhs in ["-", "+"] or rhs in ["-", "+"]:
-            part -= 1
+            part -= 1  # Since we later increase
             break
         res = _cmp(lhs[part], rhs[part])
         if res != 0:
             return res
 
-    part += 1  # Skip the already compart part even if that moves beyond end.
+    part += 1  # Skip the already compared part even if that moves beyond end.
     res = _extra_cmp(_at_or(lhs, part), _at_or(rhs, part))
     if res != 0:
         return res
