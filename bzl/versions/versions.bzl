@@ -120,9 +120,19 @@ def _parse_version(version, error = "Cannot parse version."):
 def _cmp(lhs, rhs):
     if lhs == rhs:
         return 0
-    if _maybe_int(lhs) < _maybe_int(rhs):
-        return -1
-    return 1
+    lhs = _maybe_int(lhs)
+    rhs = _maybe_int(rhs)
+    if type(lhs) == int or type(rhs) == str:
+        # Purely numeric identifiers have lower precedence than strings.
+        if type(lhs) == int and type(rhs) == str:
+            return -1
+        if type(lhs) == str and type(rhs) == int:
+            return 1
+        if type(lhs) == int and type(rhs) == int:
+            return int(lhs > rhs) - int(lhs < rhs)
+    lhs = str(lhs)
+    rhs = str(rhs)
+    return int(lhs > rhs) - int(lhs < rhs)
 
 def _extra_cmp(lhs, rhs):
     """Compares `None`, "-" and "+"."""
@@ -149,10 +159,7 @@ def _at_or(array, pos, default = None):
     return default
 
 def _version_cmp(version_lhs, version_rhs):
-    """Implements `version_lhs` <=> `version_rhs`.
-
-    The inputs are parsed with `_parse_version`.
-    """
+    """Implements `version_lhs` <=> `version_rhs`."""
     lhs = _parse_version(
         version_lhs,
         "Left hand argument is neither string, int nor list but {typ}.".format(
@@ -165,14 +172,16 @@ def _version_cmp(version_lhs, version_rhs):
             typ = type(version_rhs),
         ),
     )
-    end = min(len(lhs), len(rhs))
     part = 0
-    for part in range(end):
+    for part in range(min(len(lhs), len(rhs))):
+        if lhs in ["-", "+"] or rhs in ["-", "+"]:
+            part -= 1
+            break
         res = _cmp(lhs[part], rhs[part])
         if res != 0:
             return res
 
-    part += 1
+    part += 1  # Skip the already compart part even if that moves beyond end.
     res = _extra_cmp(_at_or(lhs, part), _at_or(rhs, part))
     if res != 0:
         return res
@@ -181,45 +190,27 @@ def _version_cmp(version_lhs, version_rhs):
     return _cmp(len(lhs), len(rhs))
 
 def _version_ge(version_lhs, version_rhs):
-    """Implements `version_lhs` >= `version_rhs`.
-
-    The inputs are parsed with `_parse_version`.
-    """
+    """Implements `version_lhs` >= `version_rhs`."""
     return _version_cmp(version_lhs, version_rhs) >= 0
 
 def _version_le(version_lhs, version_rhs):
-    """Implements `version_lhs` <= `version_rhs`.
-
-    The inputs are parsed with `_parse_version`.
-    """
+    """Implements `version_lhs` <= `version_rhs`."""
     return _version_cmp(version_lhs, version_rhs) <= 0
 
 def _version_eq(version_lhs, version_rhs):
-    """Implements `version_lhs` == `version_rhs`.
-
-    The inputs are parsed with `_parse_version`.
-    """
+    """Implements `version_lhs` == `version_rhs`."""
     return _version_cmp(version_lhs, version_rhs) == 0
 
 def _version_lt(version_lhs, version_rhs):
-    """Implements `version_lhs` < `version_rhs`.
-
-    The inputs are parsed with `_parse_version`.
-    """
+    """Implements `version_lhs` < `version_rhs`."""
     return _version_cmp(version_lhs, version_rhs) < 0
 
 def _version_gt(version_lhs, version_rhs):
-    """Implements `version_lhs` > `version_rhs`.
-
-    The inputs are parsed with `_parse_version`.
-    """
+    """Implements `version_lhs` > `version_rhs`."""
     return _version_cmp(version_lhs, version_rhs) > 0
 
 def _version_ne(version_lhs, version_rhs):
-    """Implements `version_lhs` != `version_rhs`.
-
-    The inputs are parsed with `_parse_version`.
-    """
+    """Implements `version_lhs` != `version_rhs`."""
     return _version_cmp(version_lhs, version_rhs) != 0
 
 def _version_compare(lhs, op, rhs, error = None):
@@ -276,8 +267,7 @@ def _check_one_requirement(version, requirement):
     return _check_one_requirement_struct(version, requirement)
 
 def _check_all_requirements(version, requirements):
-    """Verifiy whether `version` adheres to the `requirements` (list or string).
-    """
+    """Verifiy if `version` adheres to the `requirements` (list or string)."""
     if type(requirements) == "list":
         return all([
             _check_one_requirement(version, r)
@@ -306,7 +296,7 @@ def _parse_split_requirement(req):
     else:
         return struct(op = "==", version = _parse_version(req))
 
-def _parse_version_requirements(requirements):
+def _parse_requirements(requirements):
     """Splits the `requirements` string for use in `check_all_requirements`."""
     return [
         _parse_split_requirement(req.strip())
@@ -321,8 +311,9 @@ versions = struct(
     lt = _version_lt,
     eq = _version_eq,
     ne = _version_ne,
+    cmp = _version_cmp,
     compare = _version_compare,
     check_one_requirement = _check_one_requirement,
     check_all_requirements = _check_all_requirements,
-    parse_requirements = _parse_version_requirements,
+    parse_requirements = _parse_requirements,
 )
