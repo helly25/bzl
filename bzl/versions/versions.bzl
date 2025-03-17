@@ -49,7 +49,21 @@ def _parse_build(version):
     parts = [_maybe_int(v) for v in version.split(".")]
     return parts
 
-def _split_version_relese_build(version):
+def _split_version_relese_build(version, *, skip_build = False):
+    """Parse `version` aspects for pre-release and build.
+
+    The function drops the build component if needed (`skip_build`).
+
+    Args:
+        version:    The version to parse.
+        skip_build: Whether to drop the build component.
+                    Useful ONLY for Semver correct comparisons.
+
+    Returns:
+        Array of parsed components (only correctly handling pre-release and build).
+            * Any pre_release is preceded by '-'.
+            * Any build is preceded by '+'.
+    """
     r = None
     b = None
     for p in range(len(version)):
@@ -62,19 +76,42 @@ def _split_version_relese_build(version):
 
     if r and b:
         rel = _parse_pre_release(version[r + 1:b])
-        bld = _parse_build(version[b + 1:])
+        if skip_build:
+            bld = []
+        else:
+            bld = _parse_build(version[b + 1:])
         return [version[:r], "-"] + rel + ["+"] + bld
     elif r:
         rel = _parse_pre_release(version[r + 1:])
         return [version[:r], "-"] + rel
     elif b:
-        bld = _parse_build(version[b + 1:])
+        if skip_build:
+            bld = []
+        else:
+            bld = _parse_build(version[b + 1:])
         return [version[:b], "+"] + bld
     else:
         return [version]
 
-def _parse_version(version, error = "Cannot parse version."):
+def _list_find(values, needle, default = None):
+    for pos in range(len(values)):
+        if values[pos] == needle:
+            return pos
+    return default
+
+def _parse_version(version, *, skip_build = False, error = "Cannot parse version."):
     """Parses the input into a `list` or `tuple` of version components.
+
+    Args:
+        version:    The version to parse.
+        skip_build: Whether to drop the build component.
+                    Useful ONLY for Semver correct comparisons.
+        error:      Error messae to pass to `fail`.
+
+    Returns:
+        Array of parsed components.
+            * Any pre_release is preceded by '-'.
+            * Any build is preceded by '+'.
 
     The function requires the input to be a single int, string, list or tuple.
     If the input is a string, then it is separated into its components:
@@ -108,18 +145,24 @@ def _parse_version(version, error = "Cannot parse version."):
                 # <pre_release> and <build> components respectively.
                 # Note: Semver allows both <pre_release> and <build> to be "."
                 # separated parts. Still separated by "-" and "+" respectively.
-                release_build = _split_version_relese_build(version[-1])
+                release_build = _split_version_relese_build(
+                    version[-1],
+                    skip_build = skip_build,
+                )
                 version = version[:-1] + release_build
-
     elif type(version) == "tuple":
         version = [v for v in version]
     if type(version) == "list":
-        return [_maybe_int(version[p]) for p in range(len(version))]
+        if skip_build:
+            end = _list_find(version, "+", len(version))
+        else:
+            end = len(version)
+        return [_maybe_int(version[p]) for p in range(len(version)) if p < end]
     extra_error = "Input was: '{version}'.".format(version = version)
     if error:
         fail([error, extra_error].join(" "))
     else:
-        fail(error)
+        fail(extra_error)
 
 def _cmp(lhs, rhs):
     if lhs == rhs:
@@ -166,17 +209,19 @@ def _at_or(array, pos, default = None):
         return array[pos]
     return default
 
-def _version_cmp(version_lhs, version_rhs):
+def _version_cmp(version_lhs, version_rhs, *, skip_build = True):
     """Implements `version_lhs` <=> `version_rhs`."""
     lhs = _parse_version(
-        version_lhs,
-        "Left hand argument is neither string, int nor list but {typ}.".format(
+        version = version_lhs,
+        skip_build = skip_build,
+        error = "Left hand argument is neither string, int nor list but {typ}.".format(
             typ = type(version_lhs),
         ),
     )
     rhs = _parse_version(
-        version_rhs,
-        "Right hand argument is neither string, int nor list {typ}.".format(
+        version = version_rhs,
+        skip_build = skip_build,
+        error = "Right hand argument is neither string, int nor list {typ}.".format(
             typ = type(version_rhs),
         ),
     )
@@ -197,58 +242,59 @@ def _version_cmp(version_lhs, version_rhs):
     # All parts available on both sides are the same.
     return _cmp(len(lhs), len(rhs))
 
-def _version_ge(version_lhs, version_rhs):
+def _version_ge(version_lhs, version_rhs, *, skip_build = True):
     """Implements `version_lhs` >= `version_rhs`."""
-    return _version_cmp(version_lhs, version_rhs) >= 0
+    return _version_cmp(version_lhs, version_rhs, skip_build = skip_build) >= 0
 
-def _version_le(version_lhs, version_rhs):
+def _version_le(version_lhs, version_rhs, *, skip_build = True):
     """Implements `version_lhs` <= `version_rhs`."""
-    return _version_cmp(version_lhs, version_rhs) <= 0
+    return _version_cmp(version_lhs, version_rhs, skip_build = skip_build) <= 0
 
-def _version_eq(version_lhs, version_rhs):
+def _version_eq(version_lhs, version_rhs, *, skip_build = True):
     """Implements `version_lhs` == `version_rhs`."""
-    return _version_cmp(version_lhs, version_rhs) == 0
+    return _version_cmp(version_lhs, version_rhs, skip_build = skip_build) == 0
 
-def _version_lt(version_lhs, version_rhs):
+def _version_lt(version_lhs, version_rhs, *, skip_build = True):
     """Implements `version_lhs` < `version_rhs`."""
-    return _version_cmp(version_lhs, version_rhs) < 0
+    return _version_cmp(version_lhs, version_rhs, skip_build = skip_build) < 0
 
-def _version_gt(version_lhs, version_rhs):
+def _version_gt(version_lhs, version_rhs, *, skip_build = True):
     """Implements `version_lhs` > `version_rhs`."""
-    return _version_cmp(version_lhs, version_rhs) > 0
+    return _version_cmp(version_lhs, version_rhs, skip_build = skip_build) > 0
 
-def _version_ne(version_lhs, version_rhs):
+def _version_ne(version_lhs, version_rhs, *, skip_build = True):
     """Implements `version_lhs` != `version_rhs`."""
-    return _version_cmp(version_lhs, version_rhs) != 0
+    return _version_cmp(version_lhs, version_rhs, skip_build = skip_build) != 0
 
-def _version_compare(lhs, op, rhs, error = None):
+def _version_compare(lhs, op, rhs, *, skip_build = True, error = None):
     """Implements `lhs OP rhs`."""
     if op == ">=":
-        return _version_ge(lhs, rhs)
+        return _version_ge(lhs, rhs, skip_build = skip_build)
     elif op == "<=":
-        return _version_le(lhs, rhs)
+        return _version_le(lhs, rhs, skip_build = skip_build)
     elif op == "<":
-        return _version_lt(lhs, rhs)
+        return _version_lt(lhs, rhs, skip_build = skip_build)
     elif op == ">":
-        return _version_gt(lhs, rhs)
+        return _version_gt(lhs, rhs, skip_build = skip_build)
     elif op == "==":
-        return _version_eq(lhs, rhs)
+        return _version_eq(lhs, rhs, skip_build = skip_build)
     elif op == "!=":
-        return _version_ne(lhs, rhs)
+        return _version_ne(lhs, rhs, skip_build = skip_build)
     elif error:
         fail(error)
     else:
         fail("Bad comparator: '{op}'.".format(op = op))
 
-def _check_one_requirement_struct(version, requirement):
+def _check_one_requirement_struct(version, requirement, *, skip_build = True):
     return _version_compare(
         version,
         requirement.op,
         requirement.version,
-        "Bad requirement: '{requirement}'.".format(requirement = requirement),
+        skip_build = skip_build,
+        error = "Bad requirement: '{requirement}'.".format(requirement = requirement),
     )
 
-def _check_one_requirement(version, requirement):
+def _check_one_requirement(version, requirement, *, skip_build = True):
     """Version comparison of the given `version` against a `requirement` string.
 
     The requirement has the form:
@@ -259,31 +305,31 @@ def _check_one_requirement(version, requirement):
     """
     if type(requirement) == "string":
         if requirement.startswith(">="):
-            return _version_ge(version, requirement[2:].strip())
+            return _version_ge(version, requirement[2:].strip(), skip_build = skip_build)
         elif requirement.startswith("<="):
-            return _version_le(version, requirement[2:].strip())
+            return _version_le(version, requirement[2:].strip(), skip_build = skip_build)
         elif requirement.startswith(">"):
-            return not _version_le(version, requirement[1:].strip())
+            return not _version_le(version, requirement[1:].strip(), skip_build = skip_build)
         elif requirement.startswith("<"):
-            return not _version_ge(version, requirement[1:].strip())
+            return not _version_ge(version, requirement[1:].strip(), skip_build = skip_build)
         elif requirement.startswith("=="):
-            return _version_eq(version, requirement[2:].strip())
+            return _version_eq(version, requirement[2:].strip(), skip_build = skip_build)
         elif requirement.startswith("!="):
-            return not _version_eq(version, requirement[2:].strip())
+            return not _version_eq(version, requirement[2:].strip(), skip_build = skip_build)
         else:
-            return _version_eq(version, requirement)
-    return _check_one_requirement_struct(version, requirement)
+            return _version_eq(version, requirement, skip_build = skip_build)
+    return _check_one_requirement_struct(version, requirement, skip_build = skip_build)
 
-def _check_all_requirements(version, requirements):
+def _check_all_requirements(version, requirements, *, skip_build = True):
     """Verifiy if `version` adheres to the `requirements` (list or string)."""
     if type(requirements) == "list":
         return all([
-            _check_one_requirement(version, r)
+            _check_one_requirement(version, r, skip_build = skip_build)
             for r in requirements
         ])
     if type(requirements) == "string":
         return all([
-            _check_one_requirement(version, r.strip())
+            _check_one_requirement(version, r.strip(), skip_build = skip_build)
             for r in requirements.split(",")
         ])
     fail("Requirements must be 'list' or 'string'.")

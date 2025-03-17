@@ -47,13 +47,37 @@ fi
 # Instead of embed the version in MODULE.bazel, we expect it to be correct already.
 # perl -pi -e "s/version = \"\d+\.\d+\.\d+\",/version = \"${TAG}\",/g" MODULE.bazel
 
+# Empty `BUILD.bazel`
+{
+    cat tools/header.txt
+    echo ""
+    echo "\"\"\"Empty root BUILD for @${BAZELMOD_NAME}.\"\"\""
+} > BUILD.bazel
+
 # Apply patches
 for patch in "${PATCHES[@]}"; do
     patch -s -p 1 <"${patch}"
 done
 
+# Exclude some dev stuff from the archive.
+EXCLUDES=(
+    ".bcr"
+    ".github"
+    ".pre-commit"
+    ".pre-commit-config.yaml"
+    "tools"
+)
+{
+    for exclude in "${EXCLUDES[@]}"; do
+        echo "${exclude} export-ignore"
+        if [[ -d "${exclude}" ]]; then
+            echo "${exclude}/** export-ignore"
+        fi
+    done
+} >> .gitattributes
+
 # Build the archive
-git archive --format=tar.gz --prefix="${PREFIX}/" "${TAG}" -o "${ARCHIVE}"
+git archive --format=tar.gz --prefix="${PREFIX}/" "${TAG}" -o "${ARCHIVE}" --add-virtual-file="${PREFIX}/VERSION:${TAG}" --worktree-attributes
 
 SHA256="$(shasum -a 256 "${ARCHIVE}" | awk '{print $1}')"
 

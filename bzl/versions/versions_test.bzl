@@ -47,16 +47,45 @@ def _versions_parse_test(ctx):
 
     _assert_eq(env, versions.parse("25.35.42-rc1.beta-11.alpha--111+rc1"), [25, 35, 42, "-", "rc", 1, "beta", 11, "alpha-", 111, "+", "rc1"])
 
+    _assert_eq(env, versions.parse("25.30.42-pre+build"), [25, 30, 42, "-", "pre", "+", "build"])
+    _assert_eq(env, versions.parse("25.30.42-pre+build", skip_build = False), [25, 30, 42, "-", "pre", "+", "build"])
+    _assert_eq(env, versions.parse("25.30.42-pre+build", skip_build = True), [25, 30, 42, "-", "pre"])
+    _assert_eq(env, versions.parse("25.30.42+build"), [25, 30, 42, "+", "build"])
+    _assert_eq(env, versions.parse("25.30.42+build", skip_build = False), [25, 30, 42, "+", "build"])
+    _assert_eq(env, versions.parse("25.30.42+build", skip_build = True), [25, 30, 42])
+
     return unittest.end(env)
 
-def _test_cmp(env, lhs, rhs, expected):
-    _assert_eq(env, versions.cmp(lhs, rhs), expected, "{lhs} <=> {rhs}".format(
+def _test_cmp(env, lhs, rhs, expected, **kwargs):
+    _assert_eq(env, versions.cmp(lhs, rhs, **kwargs), expected, "{lhs} <=> {rhs}".format(
         lhs = lhs,
         rhs = rhs,
     ))
 
-def _test_op(env, lhs, op, rhs, expected):
-    _assert_eq(env, versions.compare(lhs, op, rhs), expected, "{lhs} {op} {rhs}".format(
+def _test_op(env, lhs, op, rhs, expected, **kwargs):
+    _assert_eq(env, versions.compare(lhs, op, rhs, **kwargs), expected, "{lhs} {op} {rhs}".format(
+        lhs = lhs,
+        op = op,
+        rhs = rhs,
+    ))
+
+def _test_op_eq_cmp(env, lhs, op, rhs, **kwargs):
+    cmp_result = versions.cmp(lhs, rhs, **kwargs)
+    if op == ">=":
+        expected = cmp_result >= 0
+    elif op == "<=":
+        expected = cmp_result <= 0
+    elif op == ">":
+        expected = cmp_result == 1
+    elif op == "<":
+        expected = cmp_result == -1
+    elif op == "==":
+        expected = cmp_result == 0
+    elif op == "!=":
+        expected = cmp_result != 0
+    else:
+        fail("Bad op '{op}'.".format(op = op))
+    _assert_eq(env, versions.compare(lhs, op, rhs, **kwargs), expected, "{lhs} {op} {rhs}".format(
         lhs = lhs,
         op = op,
         rhs = rhs,
@@ -98,8 +127,20 @@ def _versions_cmp_test(ctx):
     _test_cmp(env, "40.0-rc", "40.0-0", 1)  # Number before Text
     _test_cmp(env, "41.0-0", "41.0-rc", -1)
     _test_cmp(env, "42.0-1", "42.0-2", -1)
-    _test_cmp(env, "42.0-3", "42.0-3", 0)
-    _test_cmp(env, "43.0-5", "43.0-4", 1)
+    _test_cmp(env, "43.0-3", "43.0-3", 0)
+    _test_cmp(env, "44.0-5", "44.0-4", 1)
+
+    _test_cmp(env, "50.0-pre+build1", "50.0-pre+build0", 0)
+    _test_cmp(env, "51.0-pre+build1", "51.0-pre+build0", 0, skip_build = True)
+    _test_cmp(env, "52.0-pre+build1", "52.0-pre+build0", 1, skip_build = False)
+    _test_cmp(env, "53.0-pre+build2", "53.0-pre+build2", 0, skip_build = False)
+    _test_cmp(env, "54.0-pre+build3", "54.0-pre+build4", -1, skip_build = False)
+
+    _test_cmp(env, "55.0+build1", "55.0+build0", 0)
+    _test_cmp(env, "56.0+build1", "56.0+build0", 0, skip_build = True)
+    _test_cmp(env, "57.0+build1", "57.0+build0", 1, skip_build = False)
+    _test_cmp(env, "58.0+build2", "58.0+build2", 0, skip_build = False)
+    _test_cmp(env, "59.0+build3", "59.0+build4", -1, skip_build = False)
 
     return unittest.end(env)
 
@@ -136,6 +177,10 @@ def _versions_ge_test(ctx):
     _test_op(env, "38.0-rc", ">=", "38.0-beta", True)
     _test_op(env, "39.0-rc", ">=", "39.0-rc", True)
 
+    _test_op_eq_cmp(env, "55.0+build1", ">=", "55.0+build0")
+    _test_op_eq_cmp(env, "56.0+build1", ">=", "56.0+build0", skip_build = True)
+    _test_op_eq_cmp(env, "57.0+build1", ">=", "57.0+build0", skip_build = False)
+
     return unittest.end(env)
 
 def _versions_gt_test(ctx):
@@ -170,6 +215,10 @@ def _versions_gt_test(ctx):
     _test_op(env, "37.0-rc", ">", "37.0-alpha", True)
     _test_op(env, "38.0-rc", ">", "38.0-beta", True)
     _test_op(env, "39.0-rc", ">", "39.0-rc", False)
+
+    _test_op_eq_cmp(env, "55.0+build1", ">", "55.0+build0")
+    _test_op_eq_cmp(env, "56.0+build1", ">", "56.0+build0", skip_build = True)
+    _test_op_eq_cmp(env, "57.0+build1", ">", "57.0+build0", skip_build = False)
 
     return unittest.end(env)
 
@@ -206,6 +255,10 @@ def _versions_le_test(ctx):
     _test_op(env, "38.0-rc", "<=", "38.0-beta", False)
     _test_op(env, "39.0-rc", "<=", "39.0-rc", True)
 
+    _test_op_eq_cmp(env, "55.0+build1", "<=", "55.0+build0")
+    _test_op_eq_cmp(env, "56.0+build1", "<=", "56.0+build0", skip_build = True)
+    _test_op_eq_cmp(env, "57.0+build1", "<=", "57.0+build0", skip_build = False)
+
     return unittest.end(env)
 
 def _versions_lt_test(ctx):
@@ -240,6 +293,10 @@ def _versions_lt_test(ctx):
     _test_op(env, "37.0-rc", "<", "37.0-alpha", False)
     _test_op(env, "38.0-rc", "<", "38.0-beta", False)
     _test_op(env, "39.0-rc", "<", "39.0-rc", False)
+
+    _test_op_eq_cmp(env, "55.0+build1", "<", "55.0+build0")
+    _test_op_eq_cmp(env, "56.0+build1", "<", "56.0+build0", skip_build = True)
+    _test_op_eq_cmp(env, "57.0+build1", "<", "57.0+build0", skip_build = False)
 
     return unittest.end(env)
 
@@ -276,6 +333,10 @@ def _versions_eq_test(ctx):
     _test_op(env, "38.0-rc", "==", "38.0-beta", False)
     _test_op(env, "39.0-rc", "==", "39.0-rc", True)
 
+    _test_op_eq_cmp(env, "55.0+build1", "==", "55.0+build0")
+    _test_op_eq_cmp(env, "56.0+build1", "==", "56.0+build0", skip_build = True)
+    _test_op_eq_cmp(env, "57.0+build1", "==", "57.0+build0", skip_build = False)
+
     return unittest.end(env)
 
 def _versions_ne_test(ctx):
@@ -310,6 +371,10 @@ def _versions_ne_test(ctx):
     _test_op(env, "37.0-rc", "!=", "37.0-alpha", True)
     _test_op(env, "38.0-rc", "!=", "38.0-beta", True)
     _test_op(env, "39.0-rc", "!=", "39.0-rc", False)
+
+    _test_op_eq_cmp(env, "55.0+build1", "!=", "55.0+build0")
+    _test_op_eq_cmp(env, "56.0+build1", "!=", "56.0+build0", skip_build = True)
+    _test_op_eq_cmp(env, "57.0+build1", "!=", "57.0+build0", skip_build = False)
 
     return unittest.end(env)
 
