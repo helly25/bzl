@@ -72,3 +72,6 @@ git add CHANGELOG.md
 git commit -m "Bump version to ${NEXT_VERSION}"
 git push -u origin "${NEXT_BRANCH}"
 git push
+if which gh; then
+    gh pr create --title "Bump version to ${NEXT_VERSION}"
+fi
