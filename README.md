@@ -28,6 +28,12 @@ The version parameters support:
 - anything else is an error and the functions will `fail`.
 - unlike Semver, the function allows any number of numeric version components.
 
+Note: Most functions support a `skip_build` parameter. If `True`, then any
+present build component will be dropped. Conclusively the parameter is `True`
+by default for parsing and `False` for comparisons since Semver dictates that
+that the build component must be ignored for precedence (see
+[Semver-10](https://semver.org/#spec-item-10)).
+
 The functionality has exhaustive tests. If something still works wrong please,
 file a bug report or propose a fix.
 

@@ -1,3 +1,8 @@
+# 0.3.0
+
+* Added `skip_build` parameter to control whether comparisons adhere to Semver-10.
+* [BC] Changed `version.parse` and `version.compare` to take parameter `error` as a keyword only parameter.
+
 # 0.2.1
 
 * Improved support for mixed type comparisons.
