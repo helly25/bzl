@@ -1,3 +1,5 @@
+# 0.3.1
+
 # 0.3.0
 
 * Added `skip_build` parameter to control whether comparisons adhere to Semver-10.

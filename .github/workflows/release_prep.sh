@@ -89,6 +89,12 @@ echo "## [Changelog](https://github.com/helly25/${PACKAGE_NAME}/blob/${TAG}/CHAN
 awk '/^#/{f+=1;if(f>1)exit} !/^#/{print}' < CHANGELOG.md
 
 cat << EOF
+## For Bazel MODULE.bazel
+
+\`\`\`
+bazel_dep(name = "${BAZELMOD_NAME}", version = "${TAG}")
+\`\`\`
+
 ## For Bazel WORKSPACE
 
 \`\`\`
@@ -99,11 +105,5 @@ http_archive(
   url = "https://github.com/helly25/${PACKAGE_NAME}/releases/download/${TAG}/${ARCHIVE}",
   sha256 = "${SHA256}",
 )
-\`\`\`
-
-## For Bazel MODULES.bazel
-
-\`\`\`
-bazel_dep(name = "${BAZELMOD_NAME}", version = "${TAG}")
 \`\`\`
 EOF
