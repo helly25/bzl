@@ -17,9 +17,7 @@
 
 set -euo pipefail
 
-function die() {
-    echo "ERROR: ${*}" 1>&2 ; #exit 1;
-}
+function die() { echo "ERROR: ${*}" 1>&2 ; exit 1; }
 
 [[ ${#} == 1 ]] || die "Must provide a version argument."
 
@@ -56,8 +54,8 @@ fi
 
 grep "${VERSION}" < <(git tag -l) && die "Version tag is already in use."
 
-###git tag -s -a "${VERSION}"
-###git push origin --tags
+git tag -s -a "${VERSION}"
+git push origin --tags
 
 echo "Next version: ${NEXT_VERSION}"
 
@@ -68,8 +66,7 @@ sed -i "1i\
 
 NEXT_BRANCH="chore/bump_version_to_${NEXT_VERSION}"
 
-git branch "${NEXT_BRANCH}"
-git checkout "${NEXT_BRANCH}"
+git checkout -b "${NEXT_BRANCH}"
 git add MODULE.bazel
 git add CHANGELOG.md
 git commit -m "Bump version to ${NEXT_VERSION}"
