@@ -1,5 +1,7 @@
 # 0.3.1
 
+* Fixed some cases of comparisons that contain '-' or '+' against versions that are missing those parts.
+
 # 0.3.0
 
 * Added `skip_build` parameter to control whether comparisons adhere to Semver-10.
