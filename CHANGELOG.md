@@ -1,3 +1,5 @@
+# 0.3.2
+
 # 0.3.1
 
 * Fixed some cases of comparisons that contain '-' or '+' against versions that are missing those parts.
