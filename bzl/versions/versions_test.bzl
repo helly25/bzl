@@ -403,7 +403,11 @@ def _versions_check_one_requirement_test(ctx):
     _assert_eq(env, versions.check_one_requirement([26], "42"), False)
     _assert_eq(env, versions.check_one_requirement(27, ">=26"), True)
     _assert_eq(env, versions.check_one_requirement(28, "<=26"), False)
-
+    _assert_eq(env, versions.check_one_requirement([29, 0], "<=29"), False)
+    _assert_eq(env, versions.check_one_requirement([30, 0, 0], "<30"), False)
+    _assert_eq(env, versions.check_one_requirement([31, 0], ">31"), True)
+    _assert_eq(env, versions.check_one_requirement([31, 0], ">31"), True)
+    _assert_eq(env, versions.check_one_requirement([32, 0], ">=32.0-rc1"), True)
     return unittest.end(env)
 
 def _versions_check_all_requirements_test(ctx):
