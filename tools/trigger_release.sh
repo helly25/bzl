@@ -57,9 +57,9 @@ grep "${VERSION}" < <(git tag -l) && die "Version tag is already in use."
 echo "Next version: ${NEXT_VERSION}"
 
 sed -i '' -f <(
-echo '1i\'
-echo "# ${NEXT_VERSION}"
-echo ""
+    echo '1i\'
+    echo "# ${NEXT_VERSION}"
+    echo ""
 ) CHANGELOG.md
 
 sed -i '' "s/version = \"${VERSION}\"/version = \"${NEXT_VERSION}\"/" MODULE.bazel
