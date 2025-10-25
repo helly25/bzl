@@ -54,17 +54,22 @@ fi
 
 grep "${VERSION}" < <(git tag -l) && die "Version tag is already in use."
 
+echo "Next version: ${NEXT_VERSION}"
+
+sed -i '' -f <(
+    echo "1i\\"
+    echo "# ${NEXT_VERSION}"
+    echo "1i\\"
+    echo ""
+) CHANGELOG.md
+
+sed -i '' "s/version = \"${VERSION}\"/version = \"${NEXT_VERSION}\"/" MODULE.bazel
+
 git tag -s -a "${VERSION}" \
     -m "New release tag version: '${VERSION}'." \
     -m "$(awk '/^#/{if(NR>1)exit}/^[^#]/{print}' <CHANGELOG.md)"
+
 git push origin --tags
-
-echo "Next version: ${NEXT_VERSION}"
-
-sed -i "0,/version = \"${VERSION}\"/s/version = \"${VERSION}\"/version = \"${NEXT_VERSION}\"/" MODULE.bazel
-
-sed -i "1i\
-    # ${NEXT_VERSION}\n" CHANGELOG.md
 
 NEXT_BRANCH="chore/bump_version_to_${NEXT_VERSION}"
 
