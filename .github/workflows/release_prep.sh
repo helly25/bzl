@@ -33,15 +33,16 @@ PATCHES=()
 
 # Automatic vars from workflow integration.
 TAG="${GITHUB_REF_NAME}"
-VERSION="${TAG#v}" # Strip leading 'v' if present, for comparison with MODULE.bazel and CHANGELOG.md versions.
+VERSION="${TAG#v}" # Strip leading 'v' if present.
 
 if [[ "${TAG}" != "v${VERSION}" ]]; then
     die "Tag '${TAG}' has no leading 'v'."
 fi
 
 # Computed vars.
-PREFIX="${PACKAGE_NAME}-${VERSION}"
-ARCHIVE="${PACKAGE_NAME}-${VERSION}.tar.gz"
+PREFIX="${PACKAGE_NAME}-${TAG}"               # Internal archive root directory folder: bzl-v0.4.0
+ARCHIVE="${PACKAGE_NAME}-${TAG}.tar.gz"  # Target asset name on GitHub: bzl-v0.4.0.tar.gz
+
 BAZELMOD_VERSION="$(sed -rne 's,.*version = "([0-9]+([.][0-9]+)+.*)".*,\1,p' < MODULE.bazel|head -n1)"
 CHANGELOG_VERSION="$(sed -rne 's,^# ([0-9]+([.][0-9]+)+.*)$,\1,p' < CHANGELOG.md|head -n1)"
 
@@ -84,7 +85,7 @@ EXCLUDES=(
     done
 } >> .gitattributes
 
-# Build the archive
+# Build the archive directly out into the parent repo workspace root folder path
 git archive --format=tar.gz --prefix="${PREFIX}/" "${TAG}" -o "${ARCHIVE}" --add-virtual-file="${PREFIX}/VERSION:${TAG}" --worktree-attributes
 
 SHA256="$(shasum -a 256 "${ARCHIVE}" | awk '{print $1}')"
@@ -100,7 +101,7 @@ cat << EOF
 ## For Bazel MODULE.bazel
 
 \`\`\`
-bazel_dep(name = "${BAZELMOD_NAME}", version = "${TAG}")
+bazel_dep(name = "${BAZELMOD_NAME}", version = "${VERSION}")
 \`\`\`
 
 ## For Bazel WORKSPACE
