@@ -87,7 +87,7 @@ git add MODULE.bazel
 git add CHANGELOG.md
 git commit -m "Bump version to ${NEXT_VERSION}"
 git push -u origin "${NEXT_BRANCH}"
-git push
+
 # trunk-ignore(shellcheck/SC2230)
 if which gh; then
     PRNUM=""
