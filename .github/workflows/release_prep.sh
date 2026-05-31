@@ -20,6 +20,11 @@
 
 set -euo pipefail
 
+function die() {
+    echo "ERROR: ${*}" 1>&2
+    exit 1
+}
+
 # Custom args to update as needed.
 PACKAGE_NAME="bzl"
 BAZELMOD_NAME="helly25_bzl"
@@ -28,19 +33,22 @@ PATCHES=()
 
 # Automatic vars from workflow integration.
 TAG="${GITHUB_REF_NAME}"
+VERSION="${TAG#v}" # Strip leading 'v' if present, for comparison with MODULE.bazel and CHANGELOG.md versions.
 
-function die() { echo "ERROR: ${*}" 1>&2 ; exit 1; }
+if [[ "${TAG}" != "v${VERSION}" ]]; then
+    die "Tag '${TAG}' has no leading 'v'."
+fi
 
 # Computed vars.
-PREFIX="${PACKAGE_NAME}-${TAG}"
-ARCHIVE="${PACKAGE_NAME}-${TAG}.tar.gz"
+PREFIX="${PACKAGE_NAME}-${VERSION}"
+ARCHIVE="${PACKAGE_NAME}-${VERSION}.tar.gz"
 BAZELMOD_VERSION="$(sed -rne 's,.*version = "([0-9]+([.][0-9]+)+.*)".*,\1,p' < MODULE.bazel|head -n1)"
 CHANGELOG_VERSION="$(sed -rne 's,^# ([0-9]+([.][0-9]+)+.*)$,\1,p' < CHANGELOG.md|head -n1)"
 
-if [ "${BAZELMOD_VERSION}" != "${TAG}" ]; then
+if [[ "${BAZELMOD_VERSION}" != "${VERSION}" ]]; then
     die "Tag = '${TAG}' does not match version = '${BAZELMOD_VERSION}' in MODULE.bazel."
 fi
-if [ "${CHANGELOG_VERSION}" != "${TAG}" ]; then
+if [[ "${CHANGELOG_VERSION}" != "${VERSION}" ]]; then
     die "Tag = '${TAG}' does not match version = '${CHANGELOG_VERSION}' in CHANGELOG.md."
 fi
 
