@@ -1,3 +1,5 @@
+# 0.4.2
+
 # 0.4.1
 
 - Added explicit Windows and Bazel 9 support for the Bazel module releases.
