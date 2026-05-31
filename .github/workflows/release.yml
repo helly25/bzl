@@ -2,33 +2,15 @@ name: Release
 on:
   push:
     tags:
-      # trunk-ignore(yamllint/quoted-strings)
-      - "v*.*.*"
+      - "*.*.*"
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    uses: bazel-contrib/.github/.github/workflows/release_ruleset.yaml@v7
     permissions:
-      id-token: write
-      attestations: write
-      contents: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Parse Version
-        id: version
-        run: |
-          TAG_NAME=${{ github.ref_name }}
-          CLEAN_VERSION=${TAG_NAME#v}
-          echo "clean_version=${CLEAN_VERSION}" >> $GITHUB_OUTPUT
-
-      # Instead of the reusable workflow, we call the release action directly
-      # This allows us to customize the tag vs the release name perfectly.
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          name: ${{ steps.version.outputs.clean_version }}
-          tag_name: ${{ github.ref_name }}
-          files: bzl-*.tar.gz
-          prerelease: true
+      id-token: write       # Required to verify build provenance via OIDC
+      attestations: write   # Required to sign release artifacts securely
+      contents: write       # Required to create the release and upload bzl-*.tar.gz
+    with:
+      release_files: bzl-*.tar.gz
+      prerelease: true
