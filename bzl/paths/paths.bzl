@@ -94,9 +94,8 @@ def _is_absolute(path, is_windows = False):
             return True
         if normalized.startswith("/"):
             return True
-    else:
-        if normalized.startswith("/"):
-            return True
+    elif normalized.startswith("/"):
+        return True
 
     return False
 
@@ -181,6 +180,7 @@ def _join(*parts, collapse = False, is_windows = False):
 
 def _join_respect_absolute(*parts, collapse = False, is_windows = False):
     """Joins path parts, but resets the root if an absolute path is encountered."""
+
     # Traverse backwards to find the last absolute path segment
     start_index = 0
     for i in range(len(parts) - 1, -1, -1):

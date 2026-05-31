@@ -210,12 +210,12 @@ collapse_test = unittest.make(_collapse_test)
 collapse_windows_test = unittest.make(_collapse_windows_test)
 is_absolute_test = unittest.make(_is_absolute_test)
 is_absolute_windows_test = unittest.make(_is_absolute_windows_test)
-join_test = unittest.make( _join_test)
-join_windows_test = unittest.make( _join_windows_test)
+join_test = unittest.make(_join_test)
+join_windows_test = unittest.make(_join_windows_test)
 join_respect_absolute_test = unittest.make(_join_respect_absolute_test)
 join_respect_absolute_windows_test = unittest.make(_join_respect_absolute_windows_test)
-normalize_test = unittest.make( _normalize_test)
-normalize_windows_test = unittest.make( _normalize_windows_test)
+normalize_test = unittest.make(_normalize_test)
+normalize_windows_test = unittest.make(_normalize_windows_test)
 
 def paths_test_suite():
     """Creates the test targets and test suite for paths.bzl tests."""
