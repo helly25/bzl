@@ -40,11 +40,11 @@ if [[ "${TAG}" != "v${VERSION}" ]]; then
 fi
 
 # Computed vars.
-PREFIX="${PACKAGE_NAME}-${TAG}"               # Internal archive root directory folder: bzl-v0.4.0
-ARCHIVE="${PACKAGE_NAME}-${TAG}.tar.gz"  # Target asset name on GitHub: bzl-v0.4.0.tar.gz
+PREFIX="${PACKAGE_NAME}-${TAG}"         # Internal archive root directory folder: bzl-v0.4.0
+ARCHIVE="${PACKAGE_NAME}-${TAG}.tar.gz" # Target asset name on GitHub: bzl-v0.4.0.tar.gz
 
-BAZELMOD_VERSION="$(sed -rne 's,.*version = "([0-9]+([.][0-9]+)+.*)".*,\1,p' < MODULE.bazel|head -n1)"
-CHANGELOG_VERSION="$(sed -rne 's,^# ([0-9]+([.][0-9]+)+.*)$,\1,p' < CHANGELOG.md|head -n1)"
+BAZELMOD_VERSION="$(sed -rne 's,.*version = "([0-9]+([.][0-9]+)+.*)".*,\1,p' <MODULE.bazel | head -n1)"
+CHANGELOG_VERSION="$(sed -rne 's,^# ([0-9]+([.][0-9]+)+.*)$,\1,p' <CHANGELOG.md | head -n1)"
 
 if [[ "${BAZELMOD_VERSION}" != "${VERSION}" ]]; then
     die "Tag = '${TAG}' does not match version = '${BAZELMOD_VERSION}' in MODULE.bazel."
@@ -61,7 +61,7 @@ fi
     cat tools/header.txt
     echo ""
     echo "\"\"\"Empty root BUILD for @${BAZELMOD_NAME}.\"\"\""
-} > BUILD.bazel
+} >BUILD.bazel
 
 # Apply patches
 for patch in "${PATCHES[@]}"; do
@@ -83,7 +83,7 @@ EXCLUDES=(
             echo "${exclude}/** export-ignore"
         fi
     done
-} >> .gitattributes
+} >>.gitattributes
 
 # Build the archive directly out into the parent repo workspace root folder path
 git archive --format=tar.gz --prefix="${PREFIX}/" "${TAG}" -o "${ARCHIVE}" --add-virtual-file="${PREFIX}/VERSION:${TAG}" --worktree-attributes
@@ -95,9 +95,9 @@ echo "# Version ${VERSION}"
 echo "## [Changelog](https://github.com/helly25/${PACKAGE_NAME}/blob/${TAG}/CHANGELOG.md)"
 
 # Print Changelog
-awk '/^#/{f+=1;if(f>1)exit} !/^#/{print}' < CHANGELOG.md
+awk '/^#/{f+=1;if(f>1)exit} !/^#/{print}' <CHANGELOG.md
 
-cat << EOF
+cat <<EOF
 ## For Bazel MODULE.bazel
 
 \`\`\`
