@@ -17,11 +17,14 @@
 
 set -euo pipefail
 
-function die() { echo "ERROR: ${*}" 1>&2 ; exit 1; }
+function die() {
+    echo "ERROR: ${*}" 1>&2
+    exit 1
+}
 
 [[ ${#} == 1 ]] || die "Must provide a version argument."
 
-git fetch origin main  # Make sure the below is relevant
+git fetch origin main # Make sure the below is relevant
 
 if [[ -n "$(git status --porcelain)" ]]; then
     # Non empty output means non clean branch.
@@ -36,9 +39,9 @@ fi
 
 VERSION="${1}"
 
-BAZELMOD_VERSION="$(sed -rne 's,.*version = "([0-9]+([.][0-9]+)+.*)".*,\1,p' < MODULE.bazel|head -n1)"
-CHANGELOG_VERSION="$(sed -rne 's,^# ([0-9]+([.][0-9]+)+.*)$,\1,p' < CHANGELOG.md|head -n1)"
-NEXT_VERSION="$(echo "${VERSION}"|awk -F. '/^(0|[1-9][0-9]*)([.](0|[1-9][0-9]*)){2,}([-+]|$)/{print $1"."$2"."(($3)+1)}')"
+BAZELMOD_VERSION="$(sed -rne 's,.*version = "([0-9]+([.][0-9]+)+.*)".*,\1,p' <MODULE.bazel | head -n1)"
+CHANGELOG_VERSION="$(sed -rne 's,^# ([0-9]+([.][0-9]+)+.*)$,\1,p' <CHANGELOG.md | head -n1)"
+NEXT_VERSION="$(echo "${VERSION}" | awk -F. '/^(0|[1-9][0-9]*)([.](0|[1-9][0-9]*)){2,}([-+]|$)/{print $1"."$2"."(($3)+1)}')"
 
 if [[ "${BAZELMOD_VERSION}" != "${CHANGELOG_VERSION}" ]]; then
     die "MODULE.bazel (${BAZELMOD_VERSION}) != CHANGELOG.md (${CHANGELOG_VERSION})."
@@ -49,19 +52,19 @@ if [[ "${VERSION}" != "${BAZELMOD_VERSION}" ]]; then
 fi
 
 if [[ -z "${NEXT_VERSION}" ]]; then
-    die "Could not determine next version from input (${VERSION)})."
+    die "Could not determine next version from input (${VERSION})."
 fi
 
 grep "${VERSION}" < <(git tag -l) && die "Version tag is already in use."
 
 echo "Next version: ${NEXT_VERSION}"
 
-sed -i '' -f <(
-    echo "1i\\"
-    echo "# ${NEXT_VERSION}"
-    echo "1i\\"
-    echo ""
-) CHANGELOG.md
+sed -i '' -f - CHANGELOG.md <<EOF
+1i\\
+# ${NEXT_VERSION}
+1i\\
+
+EOF
 
 sed -i '' "s/version = \"${VERSION}\"/version = \"${NEXT_VERSION}\"/" MODULE.bazel
 
@@ -87,8 +90,8 @@ if which gh; then
     MERGE_SUBJECT="${BUMP_TEXT}"
     MERGE_BODY="Auto approved version bump from ${VERSION} to ${NEXT_VERSION} by trigger script."
     if gh pr create --title "${MERGE_TITLE}" -b "Created by ${0}." 2>&1 | tee pr_create_output.txt; then
-        PRNUM="$(sed -rne 's,https?://github.com/[^/]+/[^/]+/pull/([0-9]+)$,\1,p' < pr_create_output.txt)"
-        PRURL="$(sed -rne 's,https?://github.com/[^/]+/[^/]+/pull/([0-9]+)$,\0,p' < pr_create_output.txt)"
+        PRNUM="$(sed -rne 's,https?://github.com/[^/]+/[^/]+/pull/([0-9]+)$,\1,p' <pr_create_output.txt)"
+        PRURL="$(sed -rne 's,https?://github.com/[^/]+/[^/]+/pull/([0-9]+)$,\0,p' <pr_create_output.txt)"
     else
         echo "ERROR: Cannot create PR:"
         cat pr_create_output.txt
