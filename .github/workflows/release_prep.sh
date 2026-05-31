@@ -86,7 +86,7 @@ EXCLUDES=(
 } >>.gitattributes
 
 # Build the archive directly out into the parent repo workspace root folder path
-git archive --format=tar.gz --prefix="${PREFIX}/" "${TAG}" -o "${ARCHIVE}" --add-virtual-file="${PREFIX}/VERSION:${TAG}" --worktree-attributes
+git archive --format=tar.gz --prefix="${PREFIX}/" "${TAG}" -o "${ARCHIVE}" --add-virtual-file="${PREFIX}/VERSION:${VERSION}" --worktree-attributes
 
 SHA256="$(shasum -a 256 "${ARCHIVE}" | awk '{print $1}')"
 
