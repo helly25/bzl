@@ -1,5 +1,7 @@
 # 0.4.1
 
+* Added explicit Windows and Bazel 9 support for the Bazel module releases.
+
 # 0.4.0
 
 * Implement paths library.
