@@ -26,13 +26,16 @@ function die() {
 
 git fetch origin main # Make sure the below is relevant
 
+# trunk-ignore(shellcheck/SC2312)
 if [[ -n "$(git status --porcelain)" ]]; then
     # Non empty output means non clean branch.
     die "Must be run from clean 'main' branch."
 fi
+# trunk-ignore(shellcheck/SC2312)
 if [[ -n "$(git diff origin/main --numstat)" ]]; then
     die "Must be run from clean 'main' branch."
 fi
+# trunk-ignore(shellcheck/SC2312)
 if [[ -n "$(git diff origin/main --cached --numstat)" ]]; then
     die "Must be run from clean 'main' branch."
 fi
@@ -55,7 +58,8 @@ if [[ -z "${NEXT_VERSION}" ]]; then
     die "Could not determine next version from input (${VERSION})."
 fi
 
-grep "${VERSION}" < <(git tag -l) && die "Version tag is already in use."
+# trunk-ignore(shellcheck/SC2312)
+grep -E "^v${VERSION}$" < <(git tag -l) && die "Version tag is already in use."
 
 echo "Next version: ${NEXT_VERSION}"
 
@@ -68,9 +72,11 @@ EOF
 
 sed -i '' "s/version = \"${VERSION}\"/version = \"${NEXT_VERSION}\"/" MODULE.bazel
 
-git tag -s -a "${VERSION}" \
-    -m "New release tag version: '${VERSION}'." \
-    -m "$(awk '/^#/{if(NR>1)exit}/^[^#]/{print}' <CHANGELOG.md)"
+MESSAGE_BODY="$(awk '/^#/{if(NR>1)exit}/^[^#]/{print}' <CHANGELOG.md)"
+
+git tag -s -a "v${VERSION}" \
+    -m "New release tag version: 'v${VERSION}'." \
+    -m "${MESSAGE_BODY}"
 
 git push origin --tags
 
@@ -82,6 +88,7 @@ git add CHANGELOG.md
 git commit -m "Bump version to ${NEXT_VERSION}"
 git push -u origin "${NEXT_BRANCH}"
 git push
+# trunk-ignore(shellcheck/SC2230)
 if which gh; then
     PRNUM=""
     PRURL=""
@@ -89,9 +96,18 @@ if which gh; then
     MERGE_TITLE="${BUMP_TEXT}"
     MERGE_SUBJECT="${BUMP_TEXT}"
     MERGE_BODY="Auto approved version bump from ${VERSION} to ${NEXT_VERSION} by trigger script."
+    if [[ -z "${GH_TOKEN:-}" ]]; then
+        # Dynamically fetch the token from the macOS Keychain if available
+        if security find-generic-password -s "bzl-release" >/dev/null 2>&1; then
+            GH_TOKEN="$(security find-generic-password -s "bzl-release" -w)"
+            export GH_TOKEN
+        else
+            echo "WARNING: GH_TOKEN not set and 'bzl-release' not found in Keychain. Falling back to default gh host auth."
+        fi
+    fi
     if gh pr create --title "${MERGE_TITLE}" -b "Created by ${0}." 2>&1 | tee pr_create_output.txt; then
-        PRNUM="$(sed -rne 's,https?://github.com/[^/]+/[^/]+/pull/([0-9]+)$,\1,p' <pr_create_output.txt)"
-        PRURL="$(sed -rne 's,https?://github.com/[^/]+/[^/]+/pull/([0-9]+)$,\0,p' <pr_create_output.txt)"
+        PRNUM="$(sed -E -n 's,.*pull/([0-9]+).*,\1,p' pr_create_output.txt | head -n1)"
+        PRURL="https://github.com/helly25/bzl/pull/${PRNUM}"
     else
         echo "ERROR: Cannot create PR:"
         cat pr_create_output.txt
