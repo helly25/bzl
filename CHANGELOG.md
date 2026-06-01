@@ -1,5 +1,7 @@
 # 0.4.2
 
+- Fix release naming and tagging scheme back to "1.2.3" style without 'v' prefix.
+
 # 0.4.1
 
 - Added explicit Windows and Bazel 9 support for the Bazel module releases.

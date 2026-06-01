@@ -59,7 +59,7 @@ if [[ -z "${NEXT_VERSION}" ]]; then
 fi
 
 # trunk-ignore(shellcheck/SC2312)
-grep -E "^v${VERSION}$" < <(git tag -l) && die "Version tag is already in use."
+grep -E "^${VERSION}$" < <(git tag -l) && die "Version tag is already in use."
 
 echo "Next version: ${NEXT_VERSION}"
 
@@ -74,8 +74,8 @@ sed -i '' "s/version = \"${VERSION}\"/version = \"${NEXT_VERSION}\"/" MODULE.baz
 
 MESSAGE_BODY="$(awk '/^#/{if(NR>1)exit}/^[^#]/{print}' <CHANGELOG.md)"
 
-git tag -s -a "v${VERSION}" \
-    -m "New release tag version: 'v${VERSION}'." \
+git tag -s -a "${VERSION}" \
+    -m "New release tag version: '${VERSION}'." \
     -m "${MESSAGE_BODY}"
 
 git push origin --tags
