@@ -44,6 +44,52 @@ def _collapse_windows_test(ctx):
 
     return unittest.end(env)
 
+def _ensure_trailing_slash_test(ctx):
+    """Unit tests for `paths.ensure_trailing_slash` on Unix."""
+    env = unittest.begin(ctx)
+
+    _assert_eq(env, 1, paths.ensure_trailing_slash(""), "", "Empty stays empty; never promoted to an absolute root")
+    _assert_eq(env, 2, paths.ensure_trailing_slash("/"), "/", "Root keeps its single slash")
+    _assert_eq(env, 3, paths.ensure_trailing_slash("//"), "/", "Multiple root slashes collapse to one")
+    _assert_eq(env, 4, paths.ensure_trailing_slash("///"), "/")
+    _assert_eq(env, 5, paths.ensure_trailing_slash("a"), "a/")
+    _assert_eq(env, 6, paths.ensure_trailing_slash("a/"), "a/", "Idempotent when already ending in a slash")
+    _assert_eq(env, 7, paths.ensure_trailing_slash("a//"), "a/", "Multiple trailing slashes collapse to one")
+    _assert_eq(env, 8, paths.ensure_trailing_slash("a/b/c"), "a/b/c/")
+    _assert_eq(env, 9, paths.ensure_trailing_slash("/a/b"), "/a/b/")
+    _assert_eq(env, 10, paths.ensure_trailing_slash("/a//b///"), "/a/b/", "Cleans interior and trailing slashes")
+    _assert_eq(env, 11, paths.ensure_trailing_slash("a/./b"), "a/b/", "Dot segments removed by normalization")
+    _assert_eq(env, 12, paths.ensure_trailing_slash("a/b/..", collapse = True), "a/", "Collapsing applies before the separator is added")
+    _assert_eq(env, 13, paths.ensure_trailing_slash("", default_if_empty = "/"), "/", "Empty falls back to the requested root")
+    _assert_eq(env, 14, paths.ensure_trailing_slash("", default_if_empty = "root"), "root/", "Non-root defaults also get a trailing slash")
+    _assert_eq(env, 15, paths.ensure_trailing_slash("//", default_if_empty = "x"), "/", "Default is ignored when the input is non-empty after normalization")
+    _assert_eq(env, 16, paths.ensure_trailing_slash("a", default_if_empty = "/"), "a/", "Default is ignored when a real path is present")
+    _assert_eq(env, 17, paths.ensure_trailing_slash("", default_if_empty = "."), "", "A default that normalizes away still yields empty")
+
+    return unittest.end(env)
+
+def _ensure_trailing_slash_windows_test(ctx):
+    """Unit tests for `paths.ensure_trailing_slash` on Windows."""
+    env = unittest.begin(ctx)
+
+    _assert_eq(env, 1, paths.ensure_trailing_slash_windows(""), "")
+    _assert_eq(env, 2, paths.ensure_trailing_slash_windows("/"), "\\", "Single leading slash is the local absolute root")
+    _assert_eq(env, 3, paths.ensure_trailing_slash_windows("//"), "\\\\", "UNC root keeps its two slashes, not three")
+    _assert_eq(env, 4, paths.ensure_trailing_slash_windows("C:"), "C:\\", "Drive letter gains its root separator")
+    _assert_eq(env, 5, paths.ensure_trailing_slash_windows("C:\\"), "C:\\", "Drive root is idempotent")
+    _assert_eq(env, 6, paths.ensure_trailing_slash_windows("C:/"), "C:\\")
+    _assert_eq(env, 7, paths.ensure_trailing_slash_windows("a"), "a\\")
+    _assert_eq(env, 8, paths.ensure_trailing_slash_windows("a\\b\\"), "a\\b\\", "Idempotent when already ending in a backslash")
+    _assert_eq(env, 9, paths.ensure_trailing_slash_windows("a/b//"), "a\\b\\", "Mixed and duplicate slashes collapse to one backslash")
+    _assert_eq(env, 10, paths.ensure_trailing_slash_windows("C:\\foo\\bar"), "C:\\foo\\bar\\")
+    _assert_eq(env, 11, paths.ensure_trailing_slash_windows("//server/share"), "\\\\server\\share\\", "UNC share gains a trailing separator")
+    _assert_eq(env, 12, paths.ensure_trailing_slash_windows("//server/share/"), "\\\\server\\share\\", "UNC share idempotent")
+    _assert_eq(env, 13, paths.ensure_trailing_slash_windows("", default_if_empty = "/"), "\\", "OS-agnostic '/' default resolves to the Windows local root")
+    _assert_eq(env, 14, paths.ensure_trailing_slash_windows("", default_if_empty = "C:"), "C:\\", "Drive-letter default resolves to the drive root")
+    _assert_eq(env, 15, paths.ensure_trailing_slash_windows(""), "", "Without a default, empty stays empty")
+
+    return unittest.end(env)
+
 def _is_absolute_test(ctx):
     """Unit tests for paths.is_absolute and paths.is_absolute_windows."""
     env = unittest.begin(ctx)
@@ -208,6 +254,8 @@ def _normalize_windows_test(ctx):
 
 collapse_test = unittest.make(_collapse_test)
 collapse_windows_test = unittest.make(_collapse_windows_test)
+ensure_trailing_slash_test = unittest.make(_ensure_trailing_slash_test)
+ensure_trailing_slash_windows_test = unittest.make(_ensure_trailing_slash_windows_test)
 is_absolute_test = unittest.make(_is_absolute_test)
 is_absolute_windows_test = unittest.make(_is_absolute_windows_test)
 join_test = unittest.make(_join_test)
@@ -223,6 +271,8 @@ def paths_test_suite():
         "paths_tests",
         collapse_test,
         collapse_windows_test,
+        ensure_trailing_slash_test,
+        ensure_trailing_slash_windows_test,
         is_absolute_test,
         is_absolute_windows_test,
         join_test,

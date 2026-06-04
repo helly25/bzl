@@ -84,6 +84,8 @@ Provides:
   - `paths` is a single import structure:
     - `collapse`: Collapse '.' and '..' path segments for normalized Unix paths.
     - `collapse_windows`: Collapse '.' and '..' path segments for normalized Windows paths.
+    - `ensure_trailing_slash`: Ensure a Unix path ends with a single trailing slash.
+    - `ensure_trailing_slash_windows`: Ensure a Windows path ends with a single trailing backslash.
     - `is_absolute`: Returns `True` if a Unix path is absolute.
     - `is_absolute_windows`: Returns `True` if a Windows path is absolute.
     - `join`: Join path elements and return as normalized Unix paths.

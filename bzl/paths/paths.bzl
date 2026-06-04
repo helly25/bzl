@@ -155,6 +155,49 @@ def _normalize(path, collapse = False, is_windows = False):
 
     return final_path
 
+def _ensure_trailing_slash(path, collapse = False, default_if_empty = "", is_windows = False):
+    """Ensures the path ends with exactly one trailing separator, after normalization.
+
+    The path is first normalized (redundant and trailing separators removed, slashes
+    standardized), then a single trailing separator is appended -- unless the path is empty or is
+    a root that already carries its own separator.
+
+    Edge cases:
+        * An empty input falls back to `default_if_empty` (default ""). With the default, the
+          result stays "" -- returning a bare separator would wrongly promote a relative path to an
+          absolute one. Pass `default_if_empty = "/"` to instead anchor empty input at the root.
+        * Roots keep their single separator and are never doubled (e.g. "/" -> "/", "C:" -> "C:\\",
+          and the UNC root "//" -> "\\\\").
+        * One or more existing trailing separators collapse to exactly one (e.g. "a//" -> "a/").
+
+    Args:
+        path: The input path string.
+        collapse: If True, applies '..' segment collapsing during normalization.
+        default_if_empty: Path to fall back to when `path` normalizes to empty. It is itself
+            normalized and given a trailing separator, so a single OS-agnostic "/" yields the
+            correct root per platform ("/" on Unix, "\\" on Windows) without hard-coding a
+            separator at the call site. The default "" preserves the empty result.
+        is_windows: If True, applies Windows-specific normalization and uses '\\' as the separator.
+    Returns:
+        The normalized path ending in a single separator, or "" when both `path` and
+        `default_if_empty` normalize to empty.
+    """
+    normalized = _normalize(path, collapse = collapse, is_windows = is_windows)
+    if not normalized:
+        # Fall back to the caller-provided default, processed identically so its OS-specific root
+        # form is derived rather than assumed (e.g. "/" -> "\\" on Windows).
+        normalized = _normalize(default_if_empty, collapse = collapse, is_windows = is_windows)
+    if not normalized:
+        return ""
+
+    separator = "\\" if is_windows else "/"
+
+    # Roots (e.g. "/", "C:\\", the UNC root "\\\\") already end in their separator; don't double it.
+    if normalized.endswith(separator):
+        return normalized
+
+    return normalized + separator
+
 def _join(*parts, collapse = False, is_windows = False):
     """Joins path parts by stitching them together with a separator, then normalizes.
 
@@ -209,6 +252,8 @@ def _forward_kwargs(kwargs, **overrides):
 paths = struct(
     collapse = _collapse,
     collapse_windows = lambda path: _collapse(path, is_windows = True),
+    ensure_trailing_slash = _ensure_trailing_slash,
+    ensure_trailing_slash_windows = lambda path, **kwargs: _ensure_trailing_slash(path, **_forward_kwargs(kwargs, is_windows = True)),
     is_absolute = _is_absolute,
     is_absolute_windows = lambda path: _is_absolute(path, is_windows = True),
     join = _join,
