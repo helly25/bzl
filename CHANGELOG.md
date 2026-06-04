@@ -1,3 +1,5 @@
+# 0.4.4
+
 # 0.4.3
 
 - Added `paths.ensure_trailing_slash` and `paths.ensure_trailing_slash_windows` to append a single trailing separator, handling roots and existing trailing separators. An optional `default_if_empty` controls the fallback for empty input (e.g. `"/"` to anchor at the platform root).
