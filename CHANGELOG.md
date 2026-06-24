@@ -1,6 +1,10 @@
-# 0.4.5
+# 0.5.0
+
+- [BC] Dropped legacy `WORKSPACE` support; the module is now bzlmod-only.
 
 # 0.4.4
+
+- Re-release of `0.4.3` with no functional changes (release/CI tooling only).
 
 # 0.4.3
 
