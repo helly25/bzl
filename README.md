@@ -97,28 +97,16 @@ Provides:
 
 ## Installation
 
-The library is available for both Bazelmod and Workspace installations and works
-on MacOS, Ubuntu and Windows with Bazel version 7.x and 8.x (Other systems are
-simply not tested). However future version may drop Windows support.
+The library is available as a Bazel module (bzlmod) and works on MacOS, Ubuntu
+and Windows with Bazel version 7.x and 8.x (Other systems are simply not tested).
+However future version may drop Windows support.
 
-### For MODULES.bazel
+### For MODULE.bazel
 
 See [helly25/bzl/releases](https://github.com/helly25/bzl/releases) to replace the version number.
 
 ```starlark
 bazel_dep(name = "helly25_bzl", version = "0.0.0")
-```
-
-### For WORKSPACE
-
-```bazel
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-
-http_archive(
-  name = "helly25_bzl",
-  url = "https://github.com/helly25/bzl/releases/download/0.0.0/bzl-0.0.0.tar.gz",
-  sha256 = "...." # see https://github.com/helly25/bzl/releases for version numbers SHA256 codes.
-)
 ```
 
 ### Dependencies

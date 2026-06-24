@@ -28,7 +28,6 @@ function die() {
 # Custom args to update as needed.
 PACKAGE_NAME="bzl"
 BAZELMOD_NAME="helly25_bzl"
-WORKSPACE_NAME="helly25_bzl"
 PATCHES=()
 
 # Automatic vars from workflow integration.
@@ -40,8 +39,8 @@ if [[ "${TAG}" == "v${VERSION}" ]]; then
 fi
 
 # Computed vars.
-PREFIX="${PACKAGE_NAME}-${TAG}"         # Internal archive root directory folder: bzl-0.4.0
-ARCHIVE="${PACKAGE_NAME}-${TAG}.tar.gz" # Target asset name on GitHub: bzl-0.4.0.tar.gz
+PREFIX="${PACKAGE_NAME}-${TAG}"         # Internal archive root directory folder: bzl-0.5.0
+ARCHIVE="${PACKAGE_NAME}-${TAG}.tar.gz" # Target asset name on GitHub: bzl-0.5.0.tar.gz
 
 BAZELMOD_VERSION="$(sed -rne 's,.*version = "([0-9]+([.][0-9]+)+.*)".*,\1,p' <MODULE.bazel | head -n1)"
 CHANGELOG_VERSION="$(sed -rne 's,^# ([0-9]+([.][0-9]+)+.*)$,\1,p' <CHANGELOG.md | head -n1)"
@@ -64,7 +63,7 @@ fi
 } >BUILD.bazel
 
 # Apply patches
-for patch in "${PATCHES[@]}"; do
+for patch in ${PATCHES[@]+"${PATCHES[@]}"}; do
     patch -s -p 1 <"${patch}"
 done
 
@@ -85,10 +84,18 @@ EXCLUDES=(
     done
 } >>.gitattributes
 
-# Build the archive directly out into the parent repo workspace root folder path
-git archive --format=tar.gz --prefix="${PREFIX}/" "${TAG}" -o "${ARCHIVE}" --add-virtual-file="${PREFIX}/VERSION:${VERSION}" --worktree-attributes
-
-SHA256="$(shasum -a 256 "${ARCHIVE}" | awk '{print $1}')"
+# Build the archive from the patched/generated worktree, not the committed
+# "${TAG}" tree: `git archive "${TAG}"` reads the commit and would silently drop
+# the edits above (any patches, the generated BUILD.bazel). Stage the worktree
+# into a THROWAWAY index so the real index/checkout is never touched (nothing to
+# undo afterwards), and archive that tree. export-ignore still applies via the
+# staged .gitattributes (+ --worktree-attributes).
+TMP_INDEX="$(mktemp -u)"
+GIT_INDEX_FILE="${TMP_INDEX}" git read-tree HEAD
+GIT_INDEX_FILE="${TMP_INDEX}" git add --all
+ARCHIVE_TREE="$(GIT_INDEX_FILE="${TMP_INDEX}" git write-tree)"
+rm -f "${TMP_INDEX}"
+git archive --format=tar.gz --prefix="${PREFIX}/" -o "${ARCHIVE}" --add-virtual-file="${PREFIX}/VERSION:${VERSION}" --worktree-attributes "${ARCHIVE_TREE}"
 
 # Print header
 echo "# Version ${VERSION}"
@@ -102,18 +109,5 @@ cat <<EOF
 
 \`\`\`
 bazel_dep(name = "${BAZELMOD_NAME}", version = "${VERSION}")
-\`\`\`
-
-## For Bazel WORKSPACE
-
-\`\`\`
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-
-http_archive(
-  name = "${WORKSPACE_NAME}",
-  url = "https://github.com/helly25/${PACKAGE_NAME}/releases/download/${TAG}/${ARCHIVE}",
-  sha256 = "${SHA256}",
-  strip_prefix = "${PREFIX}",
-)
 \`\`\`
 EOF
