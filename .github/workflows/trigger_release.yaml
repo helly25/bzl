@@ -1,0 +1,102 @@
+# Reusable one-click release for helly25 Bazel-module repos.
+#
+# Call it from a repo's own .github/workflows/trigger_release.yml:
+#
+#   jobs:
+#     trigger-release:
+#       uses: helly25/bzl/.github/workflows/trigger_release.yaml@main
+#       secrets: inherit
+#       with:
+#         version: ${{ inputs.version }}
+#
+# It checks out the CALLER repo's `main`, verifies MODULE.bazel and CHANGELOG.md
+# agree on the version and that the version is neither tagged nor released, then
+# runs the caller's tools/trigger_release.sh, which pushes the signed version tag
+# (firing the caller's release.yml -> GitHub release + BCR) and opens the
+# next-version bump PR.
+#
+# Required (org-level) secrets, passed via `secrets: inherit`:
+#   RELEASE_TOKEN            PAT (contents + pull-requests + workflow write), used
+#                            as the checkout/push token so the pushed tag triggers
+#                            release.yml (the default GITHUB_TOKEN would not).
+#   RELEASE_GPG_PRIVATE_KEY  Dedicated release signing key (ASCII-armored).
+#   RELEASE_GPG_PASSPHRASE   Passphrase for the signing key.
+name: Trigger Release
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: "Release version x.y.z (blank = use MODULE.bazel)."
+        required: false
+        type: string
+    secrets:
+      RELEASE_TOKEN:
+        required: true
+      RELEASE_GPG_PRIVATE_KEY:
+        required: true
+      RELEASE_GPG_PASSPHRASE:
+        required: true
+
+# All writes go through RELEASE_TOKEN; the default GITHUB_TOKEN only needs read.
+permissions:
+  contents: read
+
+jobs:
+  trigger-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout caller main
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+          fetch-tags: true
+          token: ${{ secrets.RELEASE_TOKEN }}
+
+      - name: Import release signing key
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+          git_tag_gpgsign: true
+
+      - name: Resolve and validate version
+        id: ver
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          # 1) MODULE.bazel and CHANGELOG.md must agree on the version.
+          bash .pre-commit/check_version.sh
+          MODULE_VERSION="$(sed -rne 's,.*version = "([0-9]+([.][0-9]+)+.*)".*,\1,p' MODULE.bazel | head -n1)"
+          VERSION="${INPUT_VERSION:-${MODULE_VERSION}}"
+          # 2) Numeric release version, and must match MODULE.bazel when provided.
+          if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Version '${VERSION}' is not numeric x.y.z."
+            exit 1
+          fi
+          if [[ -n "${INPUT_VERSION}" && "${INPUT_VERSION}" != "${MODULE_VERSION}" ]]; then
+            echo "::error::Input version (${INPUT_VERSION}) != MODULE.bazel (${MODULE_VERSION})."
+            exit 1
+          fi
+          # 3) Must not already be tagged.
+          if [[ -n "$(git tag -l "${VERSION}")" ]]; then
+            echo "::error::Tag ${VERSION} already exists."
+            exit 1
+          fi
+          # 4) Must not already be released (also catches a draft release).
+          if gh release view "${VERSION}" >/dev/null 2>&1; then
+            echo "::error::Release ${VERSION} already exists."
+            exit 1
+          fi
+          echo "version=${VERSION}" >>"${GITHUB_OUTPUT}"
+          echo "Releasing ${VERSION}."
+
+      - name: Run tools/trigger_release.sh
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        run: tools/trigger_release.sh "${{ steps.ver.outputs.version }}"
